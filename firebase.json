@@ -12,6 +12,7 @@
     }
   },
   "hosting": {
+    "site": "olopsc-odrs",
     "public": "build/web",
     "ignore": [
       "firebase.json",

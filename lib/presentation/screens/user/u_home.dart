@@ -1,228 +1,209 @@
-// user_profile_screen.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:odrs/presentation/screens/user/edit_screen.dart';
 
-// Data model for user profile
 class UserProfile {
+  final String uid;
   final String name;
   final String email;
   final String contact;
   final String studentNumber;
+  final String course;
+  final String role;
 
   UserProfile({
+    required this.uid,
     required this.name,
     required this.email,
     required this.contact,
     required this.studentNumber,
+    required this.course,
+    required this.role,
   });
 
   factory UserProfile.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return UserProfile(
-      name: data['name'] ?? "Unknown",
-      email: data['email'] ?? "No email",
-      contact: data['contact'] ?? "No contact info",
-      studentNumber: data['student_number'] ?? "No info",
+      uid: doc.id,
+      name: data['name'] ?? '',
+      email: data['email'] ?? '',
+      contact: data['contact'] ?? '',
+      studentNumber: data['student_number'] ?? '',
+      course: data['course'] ?? 'Undefined',
+      role: data['role'] ?? 'user',
     );
   }
 
-  factory UserProfile.empty() {
+  Map<String, dynamic> toMap() => {
+        'name': name,
+        'email': email,
+        'contact': contact,
+        'student_number': studentNumber,
+        'course': course,
+        'role': role,
+      };
+
+  UserProfile copyWith({
+    String? name,
+    String? contact,
+    String? studentNumber,
+    String? course,
+  }) {
     return UserProfile(
-      name: "Unknown",
-      email: "No email",
-      contact: "No contact info",
-      studentNumber: "No info",
+      uid: uid,
+      name: name ?? this.name,
+      email: email,
+      contact: contact ?? this.contact,
+      studentNumber: studentNumber ?? this.studentNumber,
+      course: course ?? this.course,
+      role: role,
     );
   }
 }
 
-// Repository for user data
-class UserRepository {
-  final FirebaseAuth _auth;
-  final FirebaseFirestore _firestore;
+abstract class BaseUserRepository {
+  Future<UserProfile> fetchUserProfile();
+  Future<void> updateUserProfile(UserProfile profile);
+}
 
-  UserRepository({
-    FirebaseAuth? auth,
-    FirebaseFirestore? firestore,
-  })  : _auth = auth ?? FirebaseAuth.instance,
-        _firestore = firestore ?? FirebaseFirestore.instance;
+class UserRepository implements BaseUserRepository {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  @override
   Future<UserProfile> fetchUserProfile() async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('Authentication required');
+
+    final doc = await _firestore.collection('users').doc(user.uid).get();
+    if (!doc.exists) throw Exception('User profile not found');
+
+    return UserProfile.fromFirestore(doc);
+  }
+
+  @override
+  Future<void> updateUserProfile(UserProfile profile) async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) throw Exception('No authenticated user found');
+
+    final updateData = {
+      'name': profile.name,
+      'contact': profile.contact,
+      'student_number': profile.studentNumber,
+      'course': profile.course,
+    };
+
     try {
-      final user = _auth.currentUser;
-      if (user == null) throw Exception('No user logged in');
-
-      final userDoc = await _firestore.collection('users').doc(user.uid).get();
-      if (!userDoc.exists) throw Exception('User data not found');
-
-      return UserProfile.fromFirestore(userDoc);
+      await _firestore
+          .collection('users')
+          .doc(currentUser.uid)
+          .update(updateData);
+    } on FirebaseException catch (e) {
+      throw Exception('Firebase error: ${e.message}');
     } catch (e) {
-      throw Exception('Failed to load user data: $e');
+      throw Exception('Failed to update profile: $e');
     }
   }
 }
 
-// Main screen widget
-class UserHomeScreen extends StatelessWidget {
-  final UserRepository _userRepository;
+class UserProfileScreen extends StatefulWidget {
+  final BaseUserRepository userRepository;
 
-  UserHomeScreen({
-    Key? key,
-    UserRepository? userRepository,
-  })  : _userRepository = userRepository ?? UserRepository(),
-        super(key: key);
+  const UserProfileScreen({super.key, required this.userRepository});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
-      body: UserProfileView(userRepository: _userRepository),
-    );
-  }
+  State<UserProfileScreen> createState() => _UserProfileScreenState();
 }
 
-// Profile view widget
-class UserProfileView extends StatefulWidget {
-  final UserRepository userRepository;
-
-  const UserProfileView({
-    Key? key,
-    required this.userRepository,
-  }) : super(key: key);
-
-  @override
-  State<UserProfileView> createState() => _UserProfileViewState();
-}
-
-class _UserProfileViewState extends State<UserProfileView> {
-  late Future<UserProfile> _userProfileFuture;
+class _UserProfileScreenState extends State<UserProfileScreen> {
+  late Future<UserProfile> _profileFuture;
 
   @override
   void initState() {
     super.initState();
-    _userProfileFuture = widget.userRepository.fetchUserProfile();
+    _profileFuture = widget.userRepository.fetchUserProfile();
+  }
+
+  void _refreshProfile() {
+    setState(() => _profileFuture = widget.userRepository.fetchUserProfile());
   }
 
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
-      slivers: [
-        const _CustomAppBar(),
-        SliverFillRemaining(
-          child: FutureBuilder<UserProfile>(
-            future: _userProfileFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              if (snapshot.hasError) {
-                return _ErrorView(message: snapshot.error.toString());
-              }
-
-              return _ProfileCard(
-                  profile: snapshot.data ?? UserProfile.empty());
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// Custom app bar
-class _CustomAppBar extends StatelessWidget {
-  const _CustomAppBar();
-
-  @override
-  Widget build(BuildContext context) {
-    return SliverAppBar(
-      expandedHeight: 200.0,
-      floating: false,
-      pinned: true,
-      flexibleSpace: FlexibleSpaceBar(
-        title: const Text('Profile'),
-        background: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.pink[300]!,
-                Colors.pink[400]!,
-                Colors.pink[500]!,
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// Error view
-class _ErrorView extends StatelessWidget {
-  final String message;
-
-  const _ErrorView({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 48,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.error,
-                fontSize: 16,
+    return Scaffold(
+      body: RefreshIndicator(
+        onRefresh: () async => _refreshProfile(),
+        child: CustomScrollView(
+          slivers: [
+            const _ProfileAppBar(),
+            SliverToBoxAdapter(
+              child: FutureBuilder<UserProfile>(
+                future: _profileFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const _LoadingIndicator();
+                  }
+                  if (snapshot.hasError) {
+                    return _ErrorSection(
+                      error: snapshot.error.toString(),
+                      onRetry: _refreshProfile,
+                    );
+                  }
+                  return _ProfileContent(
+                    profile: snapshot.data!,
+                    onEditPressed: () => _navigateToEditScreen(snapshot.data!),
+                    onRequestDocumentsPressed: _navigateToDocumentRequestScreen,
+                  );
+                },
               ),
-              textAlign: TextAlign.center,
             ),
           ],
         ),
       ),
     );
   }
+
+  void _navigateToEditScreen(UserProfile profile) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditProfileScreen(
+          profile: profile,
+          userRepository: widget.userRepository,
+        ),
+      ),
+    );
+
+    if (result == true) {
+      _refreshProfile();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile updated successfully')),
+      );
+    }
+  }
+
+  void _navigateToDocumentRequestScreen() {
+    Navigator.pushNamed(context, '/documentRequest');
+  }
 }
 
-// Profile card
-class _ProfileCard extends StatelessWidget {
-  final UserProfile profile;
-
-  const _ProfileCard({required this.profile});
+class _ProfileAppBar extends StatelessWidget {
+  const _ProfileAppBar();
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Card(
-          color: Colors.grey[300],
-          elevation: 8,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _ProfileAvatar(),
-                const SizedBox(height: 24),
-                _ProfileInfo(profile: profile),
-                const SizedBox(height: 32),
-                _ActionButtons(),
+    return SliverAppBar(
+      expandedHeight: 150,
+      pinned: true,
+      flexibleSpace: FlexibleSpaceBar(
+        title: const Text('Profile'),
+        background: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Theme.of(context).primaryColor,
+                Theme.of(context).primaryColorDark,
               ],
             ),
           ),
@@ -232,94 +213,275 @@ class _ProfileCard extends StatelessWidget {
   }
 }
 
-// Profile avatar
-class _ProfileAvatar extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 120,
-      height: 120,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Theme.of(context).primaryColor.withOpacity(0.1),
-        border: Border.all(
-          color: Theme.of(context).primaryColor,
-          width: 2,
-        ),
-      ),
-      child: Icon(
-        Icons.person,
-        size: 60,
-        color: Theme.of(context).primaryColor,
-      ),
-    );
-  }
-}
-
-// Profile information
-class _ProfileInfo extends StatelessWidget {
+class _ProfileContent extends StatelessWidget {
   final UserProfile profile;
+  final VoidCallback onEditPressed;
+  final VoidCallback onRequestDocumentsPressed;
 
-  const _ProfileInfo({required this.profile});
+  const _ProfileContent({
+    required this.profile,
+    required this.onEditPressed,
+    required this.onRequestDocumentsPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _InfoTile(
-          icon: Icons.person_outline,
-          label: 'Name',
-          value: profile.name,
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        children: [
+          _buildHeader(context),
+          const SizedBox(height: 20),
+          _buildInfoCards(context),
+          const SizedBox(height: 24),
+          _buildActions(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor.withOpacity(0.1),
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(30),
+          bottomRight: Radius.circular(30),
         ),
-        const SizedBox(height: 16),
-        _InfoTile(
-          icon: Icons.email_outlined,
-          label: 'Email',
-          value: profile.email,
-        ),
-        const SizedBox(height: 16),
-        _InfoTile(
-          icon: Icons.phone_outlined,
-          label: 'Contact',
-          value: profile.contact,
-        ),
-        SizedBox(height: 16),
-        _InfoTile(
-          icon: Icons.numbers,
-          label: 'Student Number',
-          value: profile.studentNumber,
-        ),
-      ],
+      ),
+      child: Column(
+        children: [
+          Hero(
+            tag: 'profile_avatar',
+            child: CircleAvatar(
+              radius: 50,
+              backgroundColor: Theme.of(context).primaryColor.withOpacity(0.2),
+              child: Text(
+                profile.name[0].toUpperCase(),
+                style: TextStyle(
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).primaryColor,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            profile.name,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            profile.email,
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[600],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoCards(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Student Information',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).primaryColor,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Card(
+            elevation: 4,
+            shadowColor: Colors.black26,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  _InfoTile(
+                    icon: Icons.badge,
+                    label: 'Student Number',
+                    value: profile.studentNumber,
+                    color: Colors.blue,
+                  ),
+                  const Divider(),
+                  _InfoTile(
+                    icon: Icons.school,
+                    label: 'Course',
+                    value: profile.course,
+                    color: Colors.orange,
+                  ),
+                  const Divider(),
+                  _InfoTile(
+                    icon: Icons.phone,
+                    label: 'Contact',
+                    value: profile.contact,
+                    color: Colors.green,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActions(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          ElevatedButton(
+            onPressed: onRequestDocumentsPressed,
+            style: ElevatedButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: Theme.of(context).primaryColor,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              elevation: 4,
+              shadowColor: Theme.of(context).primaryColor.withOpacity(0.4),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.description, size: 24),
+                SizedBox(width: 12),
+                Text(
+                  'Request Documents',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton(
+            onPressed: onEditPressed,
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              side: BorderSide(color: Theme.of(context).primaryColor),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.edit, color: Theme.of(context).primaryColor),
+                const SizedBox(width: 12),
+                Text(
+                  'Edit Profile',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: () => _showLogoutDialog(context),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.logout, color: Colors.red),
+                SizedBox(width: 8),
+                Text(
+                  'Logout',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+              if (context.mounted) {
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/login',
+                  (route) => false,
+                );
+              }
+            },
+            child: const Text(
+              'Logout',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
-// Information tile
 class _InfoTile extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
+  final Color color;
 
   const _InfoTile({
     required this.icon,
     required this.label,
     required this.value,
+    required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Theme.of(context).dividerColor.withOpacity(0.2),
-        ),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(icon, color: Theme.of(context).primaryColor),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color),
+          ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -327,14 +489,17 @@ class _InfoTile extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
                 ),
-                const SizedBox(height: 4),
                 Text(
                   value,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
@@ -345,70 +510,42 @@ class _InfoTile extends StatelessWidget {
   }
 }
 
-// Action buttons
-class _ActionButtons extends StatelessWidget {
+class _LoadingIndicator extends StatelessWidget {
+  const _LoadingIndicator();
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+    return const Padding(
+      padding: EdgeInsets.all(32),
+      child: Center(child: CircularProgressIndicator()),
+    );
+  }
+}
+
+class _ErrorSection extends StatelessWidget {
+  final String error;
+  final VoidCallback onRetry;
+
+  const _ErrorSection({required this.error, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, size: 48, color: Colors.red),
+          const SizedBox(height: 16),
+          Text('Error: $error', textAlign: TextAlign.center),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.refresh),
+            label: const Text('Try Again'),
+            onPressed: onRetry,
           ),
-          onPressed: () => Navigator.pushNamed(context, '/documentRequest'),
-          icon: const Icon(Icons.description),
-          label: const Text('Request Documents'),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                onPressed: () => Navigator.pushNamed(context, '/editProfile'),
-                icon: const Icon(Icons.edit),
-                label: const Text('Edit Profile'),
-              ),
-            ),
-            SizedBox(
-              width: 8,
-            ),
-            Expanded(
-              child: OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                onPressed: () async {
-                  try {
-                    await FirebaseAuth.instance.signOut();
-                    Navigator.pushNamedAndRemoveUntil(
-                        context, '/login', (route) => false);
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error signing out: $e')),
-                    );
-                  }
-                },
-                icon: const Icon(Icons.logout),
-                label: const Text('Logout'),
-              ),
-            ),
-          ],
-        )
-      ],
+        ],
+      ),
     );
   }
 }

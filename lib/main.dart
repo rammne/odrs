@@ -24,7 +24,9 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       routes: {
         '/admin': (context) => AdminScreen(),
-        '/user': (context) => UserHomeScreen(),
+        '/user': (context) => UserProfileScreen(
+              userRepository: UserRepository(),
+            ),
         '/login': (context) => LoginScreen(),
         '/documentRequest': (context) => DocumentRequestScreen(),
       },

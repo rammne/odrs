@@ -24,36 +24,51 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+      // Login with Firebase Auth
+      final UserCredential userCredential =
+          await _auth.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
-      String uid = userCredential.user!.uid;
-      DocumentSnapshot userDoc =
-          await FirebaseFirestore.instance.collection('users').doc(uid).get();
-
-      if (!userDoc.exists) {
-        _showSnackbar("User document not found in Firestore.");
+      // Check if we have a user
+      final User? user = userCredential.user;
+      if (user == null) {
+        _showSnackbar("Authentication failed.");
         return;
       }
 
-      String role = userDoc['role'] ?? "unknown";
+      // Get user document from Firestore
+      final DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
 
-      if (userDoc.exists) {
-        String role = userDoc['role'];
+      if (!userDoc.exists) {
+        _showSnackbar("User profile not found.");
+        return;
+      }
+
+      // Safely access the role field
+      final data = userDoc.data() as Map<String, dynamic>?;
+      final String role = data?['role'] as String? ?? 'user';
+
+      // Navigate based on role
+      if (mounted) {
         if (role == 'admin') {
           Navigator.pushReplacementNamed(context, '/admin');
         } else {
           Navigator.pushReplacementNamed(context, '/user');
         }
-      } else {
-        _showSnackbar("User role not found.");
       }
     } on FirebaseAuthException catch (e) {
       _showSnackbar(e.message ?? "Login failed.");
+    } catch (e) {
+      _showSnackbar("An unexpected error occurred.");
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
