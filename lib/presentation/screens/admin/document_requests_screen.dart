@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class AdminScreen extends StatefulWidget {
-  const AdminScreen({super.key});
+class DocumentRequestsScreen extends StatefulWidget {
+  const DocumentRequestsScreen({super.key});
 
   @override
-  State<AdminScreen> createState() => _AdminScreenState();
+  State<DocumentRequestsScreen> createState() => _DocumentRequestsScreenState();
 }
 
-class _AdminScreenState extends State<AdminScreen> {
+class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String _selectedStatus = "Pending"; // Default filter
 
@@ -27,7 +27,9 @@ class _AdminScreenState extends State<AdminScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[300],
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text("Admin - Document Requests"),
         backgroundColor: Colors.blueGrey[800],
         actions: [

@@ -1,7 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:odrs/firebase_options.dart';
-import 'package:odrs/presentation/screens/admin/a_home.dart';
+import 'package:odrs/presentation/screens/admin/admin_layout.dart';
 import 'package:odrs/presentation/screens/login/login_screen.dart';
 import 'package:odrs/presentation/screens/user/document_request.dart';
 import 'package:odrs/presentation/screens/user/u_home.dart';
@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       routes: {
-        '/admin': (context) => AdminScreen(),
+        '/admin': (context) => AdminLayout(),
         '/user': (context) => UserProfileScreen(
               userRepository: UserRepository(),
             ),

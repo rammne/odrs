@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:odrs/presentation/screens/user/edit_screen.dart';
+import 'package:odrs/presentation/screens/user/request_history_screen.dart';
 
 class UserProfile {
   final String uid;
@@ -372,6 +373,41 @@ class _ProfileContent extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
+          // Request History Button
+          OutlinedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const RequestHistoryScreen(),
+                ),
+              );
+            },
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              side: BorderSide(color: Theme.of(context).primaryColor),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.history, color: Theme.of(context).primaryColor),
+                const SizedBox(width: 12),
+                Text(
+                  'Request History',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Edit Profile Button
           OutlinedButton(
             onPressed: onEditPressed,
             style: OutlinedButton.styleFrom(
@@ -398,6 +434,7 @@ class _ProfileContent extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
+          // Logout Button
           TextButton(
             onPressed: () => _showLogoutDialog(context),
             child: Row(
@@ -420,39 +457,39 @@ class _ProfileContent extends StatelessWidget {
       ),
     );
   }
+}
 
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+void _showLogoutDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      title: const Text('Logout'),
+      content: const Text('Are you sure you want to logout?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () async {
+            await FirebaseAuth.instance.signOut();
+            if (context.mounted) {
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/login',
+                (route) => false,
+              );
+            }
+          },
+          child: const Text(
+            'Logout',
+            style: TextStyle(color: Colors.red),
           ),
-          TextButton(
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-              if (context.mounted) {
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  '/login',
-                  (route) => false,
-                );
-              }
-            },
-            child: const Text(
-              'Logout',
-              style: TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
 }
 
 class _InfoTile extends StatelessWidget {
@@ -531,7 +568,7 @@ class _ErrorSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -540,9 +577,9 @@ class _ErrorSection extends StatelessWidget {
           Text('Error: $error', textAlign: TextAlign.center),
           const SizedBox(height: 16),
           ElevatedButton.icon(
+            onPressed: onRetry,
             icon: const Icon(Icons.refresh),
             label: const Text('Try Again'),
-            onPressed: onRetry,
           ),
         ],
       ),
