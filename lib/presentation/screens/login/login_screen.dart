@@ -81,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blueGrey[900],
+      backgroundColor: Colors.grey[600],
       body: Center(
         child: Container(
           padding: const EdgeInsets.all(24),
@@ -100,7 +100,9 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.abc, size: 80, color: Colors.blueGrey[700]),
+              Image.asset(
+                "images/logo.jpg",
+              ),
               const SizedBox(height: 16),
               _textField("Email", _emailController, false),
               const SizedBox(height: 16),
@@ -112,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       width: double.infinity,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blueGrey[700],
+                          backgroundColor: Colors.blue[300],
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(

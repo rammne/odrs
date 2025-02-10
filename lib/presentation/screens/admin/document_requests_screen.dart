@@ -15,6 +15,7 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
   Stream<QuerySnapshot> getAllRequests() {
     return FirebaseFirestore.instance
         .collection('document_requests')
+        .where('status', isEqualTo: _selectedStatus)
         .snapshots();
   }
 
