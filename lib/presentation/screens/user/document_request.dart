@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../utils/pdf_generator.dart';
 
 class DocumentRequestScreen extends StatefulWidget {
   const DocumentRequestScreen({super.key});
@@ -65,23 +66,47 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
     }
 
     try {
-      await _firestore.collection('document_requests').add({
+      // Show loading indicator
+      setState(() {
+        isLoading = true;
+      });
+
+      // Add the document request
+      DocumentReference docRef =
+          await _firestore.collection('document_requests').add({
         'userId': _auth.currentUser?.uid,
         'name': name,
         'studentNumber': studentNumber,
         'contact': contact,
         'dateRequested': DateTime.now(),
         'documents': _selectedDocuments,
-        'status': 'Pending', // Default status
+        'status': 'Pending',
+      });
+
+      // Generate and show receipt
+      await RequestReceiptGenerator.generateReceipt(
+        requestId: docRef.id,
+        name: name,
+        studentNumber: studentNumber,
+        contact: contact,
+        documents: _selectedDocuments,
+        requestDate: DateTime.now(),
+      );
+
+      setState(() {
+        isLoading = false;
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Request submitted successfully")),
       );
 
-      Navigator.pushReplacementNamed(
-          context, '/user'); // Return to the previous screen
+      Navigator.pushReplacementNamed(context, '/user');
     } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+
       print(e);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Failed to submit request")),
