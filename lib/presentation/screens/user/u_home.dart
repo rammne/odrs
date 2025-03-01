@@ -7,20 +7,26 @@ import 'package:odrs/presentation/screens/user/request_history_screen.dart';
 class UserProfile {
   final String uid;
   final String name;
+  final String? firstName; // New field for alumni
+  final String? lastName; // New field for alumni
   final String email;
   final String contact;
   final String studentNumber;
   final String course;
   final String role;
+  final String? yearGraduated; // New field for alumni
 
   UserProfile({
     required this.uid,
     required this.name,
+    this.firstName,
+    this.lastName,
     required this.email,
     required this.contact,
     required this.studentNumber,
     required this.course,
     required this.role,
+    this.yearGraduated,
   });
 
   factory UserProfile.fromFirestore(DocumentSnapshot doc) {
@@ -28,21 +34,27 @@ class UserProfile {
     return UserProfile(
       uid: doc.id,
       name: data['name'] ?? '',
+      firstName: data['firstName'],
+      lastName: data['lastName'],
       email: data['email'] ?? '',
       contact: data['contact'] ?? '',
       studentNumber: data['student_number'] ?? '',
       course: data['course'] ?? 'Undefined',
       role: data['role'] ?? 'user',
+      yearGraduated: data['yearGraduated'],
     );
   }
 
   Map<String, dynamic> toMap() => {
         'name': name,
+        'firstName': firstName,
+        'lastName': lastName,
         'email': email,
         'contact': contact,
         'student_number': studentNumber,
         'course': course,
         'role': role,
+        'yearGraduated': yearGraduated,
       };
 
   UserProfile copyWith({
@@ -135,31 +147,41 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () async => _refreshProfile(),
-        child: CustomScrollView(
-          slivers: [
-            const _ProfileAppBar(),
-            SliverToBoxAdapter(
-              child: FutureBuilder<UserProfile>(
-                future: _profileFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const _LoadingIndicator();
-                  }
-                  if (snapshot.hasError) {
-                    return _ErrorSection(
-                      error: snapshot.error.toString(),
-                      onRetry: _refreshProfile,
-                    );
-                  }
-                  return _ProfileContent(
-                    profile: snapshot.data!,
-                    onEditPressed: () => _navigateToEditScreen(snapshot.data!),
+        child: FutureBuilder<UserProfile>(
+          future: _profileFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const _LoadingIndicator();
+            }
+            if (snapshot.hasError) {
+              return _ErrorSection(
+                error: snapshot.error.toString(),
+                onRetry: _refreshProfile,
+              );
+            }
+
+            final profile = snapshot.data!;
+            // Check role and show appropriate screen
+            if (profile.role == 'alumni') {
+              return _AlumniProfileScreen(
+                profile: profile,
+                onEditPressed: () => _navigateToEditScreen(profile),
+              );
+            }
+
+            return CustomScrollView(
+              slivers: [
+                const _ProfileAppBar(),
+                SliverToBoxAdapter(
+                  child: _ProfileContent(
+                    profile: profile,
+                    onEditPressed: () => _navigateToEditScreen(profile),
                     onRequestDocumentsPressed: _navigateToDocumentRequestScreen,
-                  );
-                },
-              ),
-            ),
-          ],
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -567,22 +589,185 @@ class _ErrorSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(16),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline, size: 48, color: Colors.red),
-          const SizedBox(height: 16),
-          Text('Error: $error', textAlign: TextAlign.center),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Try Again'),
-          ),
-        ],
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            const SizedBox(height: 16),
+            Text('Error: $error', textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Try Again'),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+}
+
+class _AlumniProfileScreen extends StatelessWidget {
+  final UserProfile profile;
+  final VoidCallback onEditPressed;
+
+  const _AlumniProfileScreen({
+    required this.profile,
+    required this.onEditPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomScrollView(
+      slivers: [
+        // const SliverAppBar(
+        //   expandedHeight: 150,
+        //   pinned: true,
+        //   flexibleSpace: FlexibleSpaceBar(
+        //     title: Text('Alumni Profile'),
+        //   ),
+        // ),
+        SliverToBoxAdapter(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _buildAlumniHeader(context),
+                const SizedBox(height: 24),
+                _buildAlumniInfo(context),
+                const SizedBox(height: 24),
+                _buildActions(context),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAlumniHeader(BuildContext context) {
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            CircleAvatar(
+              radius: 50,
+              backgroundColor: Theme.of(context).primaryColor.withOpacity(0.2),
+              child: Text(
+                profile.name[0].toUpperCase(),
+                style: TextStyle(
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).primaryColor,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              profile.name,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              'Class of ${profile.yearGraduated}',
+              style: TextStyle(
+                fontSize: 18,
+                color: Theme.of(context).primaryColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAlumniInfo(BuildContext context) {
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Contact Information',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _InfoTile(
+              icon: Icons.email,
+              label: 'Email',
+              value: profile.email,
+              color: Colors.blue,
+            ),
+            const Divider(),
+            _InfoTile(
+              icon: Icons.phone,
+              label: 'Contact',
+              value: profile.contact,
+              color: Colors.green,
+            ),
+            const Divider(),
+            _InfoTile(
+              icon: Icons.school,
+              label: 'Year Graduated',
+              value: profile.yearGraduated!,
+              color: Colors.orange,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActions(BuildContext context) {
+    return Column(
+      children: [
+        OutlinedButton(
+          onPressed: onEditPressed,
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(Icons.edit),
+              SizedBox(width: 8),
+              Text('Edit Profile'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        TextButton(
+          onPressed: () => _showLogoutDialog(context),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(Icons.logout, color: Colors.red),
+              SizedBox(width: 8),
+              Text(
+                'Logout',
+                style: TextStyle(color: Colors.red),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

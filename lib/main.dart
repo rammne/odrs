@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:odrs/firebase_options.dart';
 import 'package:odrs/presentation/screens/admin/admin_layout.dart';
+import 'package:odrs/presentation/screens/login/alumni_info_screen.dart';
 import 'package:odrs/presentation/screens/login/login_screen.dart';
 import 'package:odrs/presentation/screens/user/document_request.dart';
 import 'package:odrs/presentation/screens/user/u_home.dart';
@@ -28,6 +29,7 @@ class MyApp extends StatelessWidget {
               userRepository: UserRepository(),
             ),
         '/login': (context) => LoginScreen(),
+        '/guestInfo': (context) => const AlumniInfoScreen(),
         '/documentRequest': (context) => DocumentRequestScreen(),
       },
       home: LoginScreen(),

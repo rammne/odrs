@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'document_requests_screen.dart';
+import 'document_requests_list_screen.dart';
 import 'user_management_screen.dart';
 import 'registration_screen.dart'; // Add this import
 
@@ -17,7 +17,7 @@ class _AdminLayoutState extends State<AdminLayout> {
   final List<Widget> _screens = [
     const DocumentRequestsScreen(),
     const UserManagementScreen(),
-    AdminRegisterUserScreen(), // Add this screen
+    AdminRegisterUserScreen(),
   ];
 
   Future<void> _showLogoutConfirmation() async {

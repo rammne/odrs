@@ -29,24 +29,13 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
 
     try {
       final User? adminUser = FirebaseAuth.instance.currentUser;
-      if (adminUser == null) {
-        throw Exception("Admin not logged in.");
-      }
-
-      // Ensure the current user is an admin
-      final adminSnapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(adminUser.uid)
-          .get();
-
-      if (!adminSnapshot.exists || adminSnapshot.data()?['isAdmin'] != true) {
-        throw Exception("Unauthorized: Only admins can register users.");
-      }
+      if (adminUser == null) throw Exception("Admin not logged in.");
+      final String adminEmail = adminUser.email!;
+      final String adminPassword = "admin123";
 
       final studentNumber = _studentNumberController.text.trim();
       final email = _emailController.text.trim();
 
-      // Check if student number already exists in Firestore
       final existingUser = await FirebaseFirestore.instance
           .collection('users')
           .doc(studentNumber)
@@ -56,35 +45,37 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
         throw Exception("A user with this student number already exists.");
       }
 
-      // Generate a temporary password using student number
       final temporaryPassword = '${studentNumber}@temp123';
 
-      // Create Firebase Authentication account
       final UserCredential userCredential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
         password: temporaryPassword,
       );
 
-      // Ensure Firestore write access
       final userUid = userCredential.user!.uid;
 
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userUid) // Use Firebase UID instead of studentNumber
-          .set({
+      await FirebaseFirestore.instance.collection('users').doc(userUid).set({
         'name': _nameController.text.trim(),
         'email': email,
         'contact': _contactController.text.trim(),
         'student_number': studentNumber,
         'course': _courseController.text.trim(),
         'role': 'user',
-        'uid': userUid, // Store Firebase Auth UID
-        'created_by': adminUser.uid, // Track which admin registered the user
+        'uid': userUid,
+        'created_by': adminUser.uid,
       });
 
-      // Send password reset email to the user
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+
+      // Sign out the newly created user
+      await FirebaseAuth.instance.signOut();
+
+      // 🔹 Re-authenticate admin properly
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: adminEmail,
+        password: adminPassword,
+      );
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -94,12 +85,13 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
         ),
       );
 
-      // Clear all fields
       _nameController.clear();
       _emailController.clear();
       _contactController.clear();
       _studentNumberController.clear();
       _courseController.clear();
+
+      await Future.delayed(Duration(milliseconds: 500));
     } catch (e) {
       print("Error: $e");
       String errorMessage = 'Registration failed';
@@ -114,6 +106,12 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
             break;
           case 'operation-not-allowed':
             errorMessage = 'Email/password accounts are not enabled';
+            break;
+          case 'wrong-password':
+            errorMessage = 'Admin password is incorrect';
+            break;
+          case 'user-not-found':
+            errorMessage = 'Admin account not found';
             break;
           default:
             errorMessage = 'Error: ${e.message}';
@@ -182,7 +180,9 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
         automaticallyImplyLeading: false,
         title: Text(
           "Register New User",
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.white,
+          ),
         ),
         backgroundColor: Colors.blueGrey[800],
         elevation: 0,

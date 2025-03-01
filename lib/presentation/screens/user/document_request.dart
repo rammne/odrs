@@ -15,18 +15,52 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   String name = "";
+  String role = "";
   String studentNumber = "";
   String contact = "";
   bool isLoading = true;
   String errorMessage = "";
 
   // Document Request Data
-  final Map<String, int> _selectedDocuments = {};
+  String? _selectedDocument;
+  int _quantity = 1;
+  String _otherDocumentText = "";
+  String _purposeText = "";
+  final TextEditingController _otherController = TextEditingController();
+  final TextEditingController _purposeController = TextEditingController();
+
+  // Certificate types for dropdown
+  final List<String> _certificateTypes = [
+    "Certificate of Graduation",
+    "Certificate of Completion",
+    "Certificate of Enrollment",
+    "Certificate of Attendance",
+    "Good Moral Certificate"
+  ];
+  String? _selectedCertificateType;
+
+  // Main document categories
+  final List<String> _documentCategories = [
+    "SF10 (F137) For Evaluation",
+    "SF10 (F137) Official",
+    "Certificate", // This will use the dropdown
+    "ESC Certification",
+    "Diploma",
+    "Assessment of School Fees",
+    "Other" // For custom document requests
+  ];
 
   @override
   void initState() {
     super.initState();
     _fetchUserData();
+  }
+
+  @override
+  void dispose() {
+    _otherController.dispose();
+    _purposeController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchUserData() async {
@@ -35,11 +69,16 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
       if (user != null) {
         DocumentSnapshot userDoc =
             await _firestore.collection('users').doc(user.uid).get();
+
         if (userDoc.exists) {
+          final data = userDoc.data() as Map<String, dynamic>;
           setState(() {
-            name = userDoc['name'] ?? "Unknown";
-            studentNumber = userDoc['student_number'] ?? "N/A";
-            contact = userDoc['contact'] ?? "No contact info";
+            // Handle both regular and guest users
+            name = data['name'] ??
+                '${data['firstName']} ${data['lastName']}'.trim();
+            studentNumber = data['student_number'] ?? 'N/A (Alumni)';
+            contact = data['contact'] ?? 'Not provided';
+            role = data['role'] ?? 'alumni';
             isLoading = false;
           });
         } else {
@@ -51,19 +90,49 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
       }
     } catch (e) {
       setState(() {
-        errorMessage = "Failed to load user data.";
+        errorMessage = "Failed to load user data: ${e.toString()}";
         isLoading = false;
       });
     }
   }
 
   void _submitRequest() async {
-    if (_selectedDocuments.isEmpty) {
+    // Validate input
+    if (_selectedDocument == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please select at least one document")),
+        const SnackBar(content: Text("Please select a document")),
       );
       return;
     }
+
+    if (_selectedDocument == "Certificate" &&
+        _selectedCertificateType == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please select a certificate type")),
+      );
+      return;
+    }
+
+    if (_selectedDocument == "Other" && _otherDocumentText.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please specify the document you need")),
+      );
+      return;
+    }
+
+    if (_purposeText.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text("Please specify the purpose of your request")),
+      );
+      return;
+    }
+
+    String finalDocumentName = _selectedDocument == "Certificate"
+        ? _selectedCertificateType!
+        : (_selectedDocument == "Other"
+            ? _otherDocumentText
+            : _selectedDocument!);
 
     try {
       // Show loading indicator
@@ -79,8 +148,11 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
         'studentNumber': studentNumber,
         'contact': contact,
         'dateRequested': DateTime.now(),
-        'documents': _selectedDocuments,
+        'documentName': finalDocumentName,
+        'quantity': _quantity,
+        'purpose': _purposeText,
         'status': 'Pending',
+        'role': role,
       });
 
       // Generate and show receipt
@@ -89,8 +161,9 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
         name: name,
         studentNumber: studentNumber,
         contact: contact,
-        documents: _selectedDocuments,
+        documents: {finalDocumentName: _quantity},
         requestDate: DateTime.now(),
+        purpose: _purposeText,
       );
 
       setState(() {
@@ -112,16 +185,6 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
         const SnackBar(content: Text("Failed to submit request")),
       );
     }
-  }
-
-  void _toggleDocument(String docName) {
-    setState(() {
-      if (_selectedDocuments.containsKey(docName)) {
-        _selectedDocuments.remove(docName);
-      } else {
-        _selectedDocuments[docName] = 1; // Default quantity
-      }
-    });
   }
 
   @override
@@ -174,7 +237,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                       ),
                       const SizedBox(height: 24),
                       const Text(
-                        "Available Documents",
+                        "Document Selection",
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -186,29 +249,193 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                         elevation: 2,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
-                        child: ListView(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          children: [
-                            _documentCheckbox("SF10 (F137) For Evaluation"),
-                            const Divider(height: 1),
-                            _documentCheckbox("SF10 (F137) Official"),
-                            const Divider(height: 1),
-                            _documentCheckbox(
-                                "Certificate of Graduation / Completion"),
-                            const Divider(height: 1),
-                            _documentCheckbox(
-                                "Certificate of Enrollment / Attendance"),
-                            const Divider(height: 1),
-                            _documentCheckbox("ESC Certification"),
-                            const Divider(height: 1),
-                            _documentCheckbox(
-                                "Diploma / Certificate of Completion"),
-                            const Divider(height: 1),
-                            _documentCheckbox("Good Moral Certificate"),
-                            const Divider(height: 1),
-                            _documentCheckbox("Assessment of School Fees"),
-                          ],
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Select one document type:",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              ..._documentCategories
+                                  .map((document) =>
+                                      _documentRadioTile(document))
+                                  .toList(),
+                              if (_selectedDocument == "Certificate") ...[
+                                const SizedBox(height: 16),
+                                const Text(
+                                  "Select certificate type:",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12),
+                                  decoration: BoxDecoration(
+                                    border:
+                                        Border.all(color: Colors.grey.shade300),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: DropdownButtonHideUnderline(
+                                    child: DropdownButton<String>(
+                                      value: _selectedCertificateType,
+                                      isExpanded: true,
+                                      hint:
+                                          const Text("Select certificate type"),
+                                      items: _certificateTypes.map((type) {
+                                        return DropdownMenuItem<String>(
+                                          value: type,
+                                          child: Text(type),
+                                        );
+                                      }).toList(),
+                                      onChanged: (value) {
+                                        setState(() {
+                                          _selectedCertificateType = value;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              if (_selectedDocument == "Other") ...[
+                                const SizedBox(height: 16),
+                                const Text(
+                                  "Please specify the document:",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                TextField(
+                                  controller: _otherController,
+                                  decoration: InputDecoration(
+                                    hintText: "Enter document name",
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 16),
+                                  ),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _otherDocumentText = value;
+                                    });
+                                  },
+                                ),
+                              ],
+                              if (_selectedDocument != null) ...[
+                                const SizedBox(height: 24),
+                                Row(
+                                  children: [
+                                    const Text(
+                                      "Number of copies:",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Container(
+                                      width: 120,
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                            color: Colors.grey.shade300),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          IconButton(
+                                            icon: const Icon(Icons.remove,
+                                                size: 20),
+                                            onPressed: () {
+                                              setState(() {
+                                                if (_quantity > 1) {
+                                                  _quantity--;
+                                                }
+                                              });
+                                            },
+                                            padding: EdgeInsets.zero,
+                                            constraints: const BoxConstraints(),
+                                          ),
+                                          Expanded(
+                                            child: Center(
+                                              child: Text(
+                                                '$_quantity',
+                                                style: const TextStyle(
+                                                    fontSize: 16),
+                                              ),
+                                            ),
+                                          ),
+                                          IconButton(
+                                            icon:
+                                                const Icon(Icons.add, size: 20),
+                                            onPressed: () {
+                                              setState(() {
+                                                _quantity++;
+                                              });
+                                            },
+                                            padding: EdgeInsets.zero,
+                                            constraints: const BoxConstraints(),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      const Text(
+                        "Purpose of Request",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blueGrey,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              TextField(
+                                controller: _purposeController,
+                                decoration: InputDecoration(
+                                  hintText: "Enter the purpose of your request",
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 16),
+                                ),
+                                maxLines: 3,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _purposeText = value;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -262,65 +489,24 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
     );
   }
 
-  Widget _documentCheckbox(String docName) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      title: Text(
-        docName,
-        style: const TextStyle(fontSize: 15),
+  Widget _documentRadioTile(String docName) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: RadioListTile<String>(
+        title: Text(docName),
+        value: docName,
+        groupValue: _selectedDocument,
+        onChanged: (String? value) {
+          setState(() {
+            _selectedDocument = value;
+            if (value != "Certificate") {
+              _selectedCertificateType = null;
+            }
+          });
+        },
+        activeColor: Colors.blueGrey[700],
+        contentPadding: const EdgeInsets.symmetric(horizontal: 0),
       ),
-      trailing: _selectedDocuments.containsKey(docName)
-          ? Container(
-              width: 100,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.remove, size: 20),
-                    onPressed: () {
-                      setState(() {
-                        if (_selectedDocuments[docName]! > 1) {
-                          _selectedDocuments[docName] =
-                              _selectedDocuments[docName]! - 1;
-                        } else {
-                          _selectedDocuments.remove(docName);
-                        }
-                      });
-                    },
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        '${_selectedDocuments[docName]}',
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.add, size: 20),
-                    onPressed: () {
-                      setState(() {
-                        _selectedDocuments[docName] =
-                            (_selectedDocuments[docName] ?? 0) + 1;
-                      });
-                    },
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                ],
-              ),
-            )
-          : Checkbox(
-              value: _selectedDocuments.containsKey(docName),
-              onChanged: (bool? value) => _toggleDocument(docName),
-              activeColor: Colors.blueGrey[700],
-            ),
     );
   }
 }

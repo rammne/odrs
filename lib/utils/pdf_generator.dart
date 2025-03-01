@@ -10,6 +10,7 @@ class RequestReceiptGenerator {
     required String contact,
     required Map<String, int> documents,
     required DateTime requestDate,
+    required String purpose, // Add this parameter
   }) async {
     final pdf = pw.Document();
 
@@ -38,6 +39,9 @@ class RequestReceiptGenerator {
               pw.Text('Requested Documents:'),
               ...documents.entries
                   .map((doc) => pw.Text('- ${doc.key} (${doc.value} copies)')),
+              pw.SizedBox(height: 20),
+              pw.Text('Purpose:'),
+              pw.Text(purpose), // Add purpose to the receipt
               pw.SizedBox(height: 40),
               pw.Text(
                   'Please present a copy (soft copy or hard copy) of this receipt when claiming your documents.'),

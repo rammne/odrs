@@ -2,15 +2,32 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'user_profile_screen.dart';
 
-class UserManagementScreen extends StatelessWidget {
+class UserManagementScreen extends StatefulWidget {
   const UserManagementScreen({super.key});
 
-  Future<AggregateQuerySnapshot> getUserCount() {
-    return FirebaseFirestore.instance
+  @override
+  State<UserManagementScreen> createState() => _UserManagementScreenState();
+}
+
+class _UserManagementScreenState extends State<UserManagementScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = "";
+  bool _isSearching = false;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Stream<QuerySnapshot> getUsers(String role) {
+    var query = FirebaseFirestore.instance
         .collection('users')
-        .where("role", isEqualTo: "user")
-        .count()
-        .get();
+        .where("role", isEqualTo: role);
+    if (_searchQuery.isNotEmpty) {
+      query = query.where("student_number", isEqualTo: _searchQuery);
+    }
+    return query.snapshots(includeMetadataChanges: true);
   }
 
   @override
@@ -19,44 +36,65 @@ class UserManagementScreen extends StatelessWidget {
       backgroundColor: Colors.grey[300],
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: FutureBuilder<AggregateQuerySnapshot>(
-          future: getUserCount(),
-          builder: (context, snapshot) {
-            int? userCount = snapshot.hasData ? snapshot.data!.count : 0;
-            return Row(
-              children: [
-                const Text('User Management'),
-                const SizedBox(width: 10),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white24,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    'Total: $userCount',
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
+        title: _isSearching ? _buildSearchField() : _buildAppBarTitle(),
         backgroundColor: Colors.blueGrey[800],
+        actions: [
+          IconButton(
+            icon: Icon(_isSearching ? Icons.close : Icons.search,
+                color: Colors.white),
+            onPressed: () {
+              setState(() {
+                if (_isSearching) {
+                  _searchController.clear();
+                  _searchQuery = "";
+                }
+                _isSearching = !_isSearching;
+              });
+            },
+          ),
+        ],
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('users')
-            .where("role", isEqualTo: "user")
-            .snapshots(),
+      body: Row(
+        children: [
+          Expanded(
+            child: Column(
+              children: [
+                Text('Alumni', style: TextStyle(color: Colors.blueGrey[800])),
+                Expanded(
+                    child: _buildUserList("alumni", Colors.blueGrey[100]!)),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Column(
+              children: [
+                Text('Users', style: TextStyle(color: Colors.blueGrey[800])),
+                Expanded(child: _buildUserList("user", Colors.white)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUserList(String role, Color bgColor) {
+    return Container(
+      color: bgColor,
+      child: StreamBuilder<QuerySnapshot>(
+        stream: getUsers(role),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text('No users found'));
+            return Center(
+              child: Text(
+                role == "alumni" ? "No Alumni Found" : "No Users Found",
+                style: const TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            );
           }
 
           return ListView.builder(
@@ -71,7 +109,18 @@ class UserManagementScreen extends StatelessWidget {
                 child: ListTile(
                   leading: const Icon(Icons.person),
                   title: Text(userData['name'] ?? 'No name'),
-                  subtitle: Text(userData['email'] ?? 'No email'),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(userData['email'] ?? 'No email'),
+                      Text(
+                        'Student #: ${userData['student_number'] ?? 'Alumni'}',
+                        style:
+                            const TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                  isThreeLine: true,
                   trailing: const Icon(Icons.arrow_forward_ios),
                   onTap: () {
                     Navigator.push(
@@ -88,6 +137,40 @@ class UserManagementScreen extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildAppBarTitle() {
+    return const Text(
+      'User Management',
+      style: TextStyle(color: Colors.white),
+    );
+  }
+
+  Widget _buildSearchField() {
+    return TextField(
+      controller: _searchController,
+      autofocus: true,
+      decoration: InputDecoration(
+        hintText: "Search by student number...",
+        hintStyle: const TextStyle(color: Colors.white70),
+        border: InputBorder.none,
+        suffixIcon: IconButton(
+          icon: const Icon(Icons.search, color: Colors.white),
+          onPressed: () {
+            setState(() {
+              _searchQuery = _searchController.text.trim();
+            });
+          },
+        ),
+      ),
+      style: const TextStyle(color: Colors.white),
+      cursorColor: Colors.white,
+      onSubmitted: (value) {
+        setState(() {
+          _searchQuery = value.trim();
+        });
+      },
     );
   }
 }

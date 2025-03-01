@@ -21,6 +21,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late String _contact;
   late String _studentNumber;
   late String _course;
+  String? _firstName;
+  String? _lastName;
+  String? _yearGraduated;
   bool _isSaving = false;
 
   @override
@@ -30,6 +33,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _contact = widget.profile.contact;
     _studentNumber = widget.profile.studentNumber;
     _course = widget.profile.course;
+    _firstName = widget.profile.firstName;
+    _lastName = widget.profile.lastName;
+    _yearGraduated = widget.profile.yearGraduated;
   }
 
   Future<void> _saveProfile() async {
@@ -43,12 +49,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       final updatedProfile = UserProfile(
         uid: widget.profile.uid,
-        name: _name,
+        name:
+            widget.profile.role == 'alumni' ? '$_firstName $_lastName' : _name,
+        firstName: _firstName,
+        lastName: _lastName,
         email: widget.profile.email,
         contact: _contact,
         studentNumber: _studentNumber,
         course: _course,
         role: widget.profile.role,
+        yearGraduated: _yearGraduated,
       );
 
       await widget.userRepository.updateUserProfile(updatedProfile);
@@ -87,7 +97,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Profile'),
+        title: Text(widget.profile.role == 'alumni'
+            ? 'Edit Alumni Profile'
+            : 'Edit Profile'),
         backgroundColor: Theme.of(context).primaryColor,
       ),
       body: SingleChildScrollView(
@@ -96,61 +108,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           key: _formKey,
           child: Column(
             children: [
-              TextFormField(
-                initialValue: widget.profile.email,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                ),
-                readOnly: true,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                initialValue: _name,
-                decoration: const InputDecoration(
-                  labelText: 'Name',
-                  border: OutlineInputBorder(),
-                ),
-                onSaved: (value) => _name = value?.trim() ?? "",
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Enter your name' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                initialValue: _contact,
-                decoration: const InputDecoration(
-                  labelText: 'Contact',
-                  border: OutlineInputBorder(),
-                  hintText: '09XXXXXXXXX',
-                ),
-                keyboardType: TextInputType.phone,
-                onSaved: (value) => _contact = value?.trim() ?? "",
-                validator: _validateContact,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                initialValue: _studentNumber,
-                decoration: const InputDecoration(
-                  labelText: 'Student Number',
-                  border: OutlineInputBorder(),
-                ),
-                onSaved: (value) => _studentNumber = value?.trim() ?? "",
-                validator: (value) => value == null || value.isEmpty
-                    ? 'Enter student number'
-                    : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                initialValue: _course,
-                decoration: const InputDecoration(
-                  labelText: 'Course',
-                  border: OutlineInputBorder(),
-                ),
-                onSaved: (value) => _course = value?.trim() ?? "",
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Enter course' : null,
-              ),
-              const SizedBox(height: 16),
+              // Show different fields based on role
+              if (widget.profile.role == 'alumni') ...[
+                _buildAlumniFields(),
+              ] else ...[
+                _buildStudentFields(),
+              ],
               const SizedBox(height: 24),
               _isSaving
                   ? const CircularProgressIndicator()
@@ -170,6 +133,117 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildAlumniFields() {
+    return Column(
+      children: [
+        TextFormField(
+          initialValue: _firstName,
+          decoration: const InputDecoration(
+            labelText: 'First Name',
+            border: OutlineInputBorder(),
+          ),
+          onSaved: (value) => _firstName = value?.trim(),
+          validator: (value) =>
+              value == null || value.isEmpty ? 'Enter first name' : null,
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          initialValue: _lastName,
+          decoration: const InputDecoration(
+            labelText: 'Last Name',
+            border: OutlineInputBorder(),
+          ),
+          onSaved: (value) => _lastName = value?.trim(),
+          validator: (value) =>
+              value == null || value.isEmpty ? 'Enter last name' : null,
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          initialValue: _yearGraduated,
+          decoration: const InputDecoration(
+            labelText: 'Year Graduated',
+            border: OutlineInputBorder(),
+          ),
+          onSaved: (value) => _yearGraduated = value?.trim(),
+          validator: (value) =>
+              value == null || value.isEmpty ? 'Enter graduation year' : null,
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          initialValue: _contact,
+          decoration: const InputDecoration(
+            labelText: 'Contact Number',
+            border: OutlineInputBorder(),
+            hintText: '09XXXXXXXXX',
+          ),
+          keyboardType: TextInputType.phone,
+          onSaved: (value) => _contact = value?.trim() ?? "",
+          validator: _validateContact,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStudentFields() {
+    return Column(
+      children: [
+        TextFormField(
+          initialValue: widget.profile.email,
+          decoration: const InputDecoration(
+            labelText: 'Email',
+            border: OutlineInputBorder(),
+          ),
+          readOnly: true,
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          initialValue: _name,
+          decoration: const InputDecoration(
+            labelText: 'Name',
+            border: OutlineInputBorder(),
+          ),
+          onSaved: (value) => _name = value?.trim() ?? "",
+          validator: (value) =>
+              value == null || value.isEmpty ? 'Enter your name' : null,
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          initialValue: _contact,
+          decoration: const InputDecoration(
+            labelText: 'Contact',
+            border: OutlineInputBorder(),
+            hintText: '09XXXXXXXXX',
+          ),
+          keyboardType: TextInputType.phone,
+          onSaved: (value) => _contact = value?.trim() ?? "",
+          validator: _validateContact,
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          initialValue: _studentNumber,
+          decoration: const InputDecoration(
+            labelText: 'Student Number',
+            border: OutlineInputBorder(),
+          ),
+          onSaved: (value) => _studentNumber = value?.trim() ?? "",
+          validator: (value) =>
+              value == null || value.isEmpty ? 'Enter student number' : null,
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          initialValue: _course,
+          decoration: const InputDecoration(
+            labelText: 'Course',
+            border: OutlineInputBorder(),
+          ),
+          onSaved: (value) => _course = value?.trim() ?? "",
+          validator: (value) =>
+              value == null || value.isEmpty ? 'Enter course' : null,
+        ),
+      ],
     );
   }
 }
