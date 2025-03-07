@@ -83,6 +83,82 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _forgotPassword() async {
+    final TextEditingController resetEmailController = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reset Password'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Enter your email address to reset your password.'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: resetEmailController,
+              decoration: const InputDecoration(
+                labelText: 'Email',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.emailAddress,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (resetEmailController.text.isEmpty) {
+                _showSnackbar('Please enter your email address.');
+                return;
+              }
+
+              try {
+                // Check if email exists in users collection
+                final QuerySnapshot result = await FirebaseFirestore.instance
+                    .collection('users')
+                    .where('email', isEqualTo: resetEmailController.text.trim())
+                    .limit(1)
+                    .get();
+
+                if (result.docs.isEmpty) {
+                  if (mounted) {
+                    Navigator.pop(context);
+                    _showSnackbar('No account found with this email address.');
+                  }
+                  return;
+                }
+
+                // If email exists, send reset link
+                await _auth.sendPasswordResetEmail(
+                  email: resetEmailController.text.trim(),
+                );
+
+                if (mounted) {
+                  Navigator.pop(context);
+                  _showSnackbar(
+                    'Password reset link sent to your email address.',
+                  );
+                }
+              } on FirebaseAuthException catch (e) {
+                Navigator.pop(context);
+                _showSnackbar(e.message ?? 'Failed to send reset email.');
+              } catch (e) {
+                Navigator.pop(context);
+                _showSnackbar('An error occurred. Please try again.');
+              }
+            },
+            child: const Text('Reset Password'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
@@ -92,65 +168,122 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[600],
-      body: Center(
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          width: 400,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 8,
-                offset: Offset(2, 2),
-              ),
-            ],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.blue[400]!, Colors.blue[800]!],
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset("images/logo.jpg"),
-              const SizedBox(height: 16),
-              _textField("Email", _emailController, false),
-              const SizedBox(height: 16),
-              _textField("Password", _passwordController, true),
-              const SizedBox(height: 24),
-              _isLoading
-                  ? const CircularProgressIndicator()
-                  : Column(
-                      children: [
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue[300],
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.all(32),
+              width: 450,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
+                    "images/logo.jpg",
+                    height: 120,
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'ODRS',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue[800],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Please sign in to continue',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  _textField("Email", _emailController, false),
+                  const SizedBox(height: 20),
+                  _textField("Password", _passwordController, true),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: _forgotPassword,
+                      child: Text(
+                        'Forgot Password?',
+                        style: TextStyle(color: Colors.blue[800]),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  _isLoading
+                      ? const CircularProgressIndicator()
+                      : Column(
+                          children: [
+                            SizedBox(
+                              width: double.infinity,
+                              height: 50,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue[800],
+                                  foregroundColor: Colors.white,
+                                  elevation: 2,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                onPressed: _login,
+                                child: const Text(
+                                  "Sign In",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
                             ),
-                            onPressed: _login,
-                            child: const Text(
-                              "LOGIN",
-                              style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold),
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 50,
+                              child: OutlinedButton(
+                                style: OutlinedButton.styleFrom(
+                                  side: BorderSide(color: Colors.blue[800]!),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                onPressed: _loginAnonymously,
+                                child: Text(
+                                  "Continue as Guest",
+                                  style: TextStyle(
+                                    color: Colors.blue[800],
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton(
-                            onPressed: _loginAnonymously,
-                            child: const Text("Continue as Guest"),
-                          ),
-                        ),
-                      ],
-                    ),
-            ],
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -159,14 +292,29 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _textField(
       String label, TextEditingController controller, bool isPassword) {
-    return TextField(
+    return TextFormField(
       controller: controller,
       obscureText: isPassword,
+      style: const TextStyle(fontSize: 16),
       decoration: InputDecoration(
         labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        labelStyle: TextStyle(color: Colors.grey[600]),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey[300]!),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.blue[800]!, width: 2),
+        ),
+        filled: true,
+        fillColor: Colors.grey[50],
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        prefixIcon: Icon(
+          isPassword ? Icons.lock_outline : Icons.email_outlined,
+          color: Colors.grey[600],
+        ),
       ),
     );
   }

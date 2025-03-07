@@ -81,24 +81,16 @@ class RequestHistoryScreen extends StatelessWidget {
                                 'Student Number: ${requestData['studentNumber'] ?? 'N/A'}'),
                             Text('Contact: ${requestData['contact'] ?? 'N/A'}'),
                             Text('Documents Requested:\n$documentsList'),
-                            Text(
-                                'Status: ${requestData['status'] ?? 'Pending'}'),
+                            Text('Status: ${_getStatusText(requestData)}'),
                             Text(
                                 'Date Requested: ${formatDate(requestData['dateRequested'])}'),
                           ],
                         ),
                         isThreeLine: true,
                         trailing: Icon(
-                          requestData['status'] == 'Approved'
-                              ? Icons.check_circle
-                              : requestData['status'] == 'Rejected'
-                                  ? Icons.cancel
-                                  : Icons.hourglass_empty,
-                          color: requestData['status'] == 'Approved'
-                              ? Colors.green
-                              : requestData['status'] == 'Rejected'
-                                  ? Colors.red
-                                  : Colors.orange,
+                          getStatusIcon(requestData['status'] ?? 'Pending'),
+                          color: getStatusColor(
+                              requestData['status'] ?? 'Pending'),
                         ),
                       ),
                     );
@@ -107,5 +99,43 @@ class RequestHistoryScreen extends StatelessWidget {
               },
             ),
     );
+  }
+
+  String _getStatusText(Map<String, dynamic> data) {
+    String status = data['status'] ?? 'Pending';
+    if (status == 'Processing' && data['processingLocation'] != null) {
+      return '$status - currently in ${data['processingLocation']}';
+    }
+    return status;
+  }
+
+  IconData getStatusIcon(String status) {
+    switch (status.toLowerCase()) {
+      case 'ready for pickup':
+        return Icons.assignment_turned_in;
+      case 'processing':
+        return Icons.hourglass_empty;
+      case 'completed':
+        return Icons.check_circle;
+      case 'cancelled':
+        return Icons.cancel;
+      default:
+        return Icons.pending;
+    }
+  }
+
+  Color getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'ready for pickup':
+        return Colors.blue;
+      case 'processing':
+        return Colors.orange;
+      case 'completed':
+        return Colors.green;
+      case 'cancelled':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
   }
 }

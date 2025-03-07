@@ -145,45 +145,270 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: RefreshIndicator(
-        onRefresh: () async => _refreshProfile(),
-        child: FutureBuilder<UserProfile>(
-          future: _profileFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const _LoadingIndicator();
-            }
-            if (snapshot.hasError) {
-              return _ErrorSection(
-                error: snapshot.error.toString(),
-                onRetry: _refreshProfile,
-              );
-            }
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.blue[400]!, Colors.blue[800]!],
+          ),
+        ),
+        child: RefreshIndicator(
+          onRefresh: () async => _refreshProfile(),
+          child: FutureBuilder<UserProfile>(
+            future: _profileFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const _LoadingIndicator();
+              }
+              if (snapshot.hasError) {
+                return _ErrorSection(
+                  error: snapshot.error.toString(),
+                  onRetry: _refreshProfile,
+                );
+              }
 
-            final profile = snapshot.data!;
-            // Check role and show appropriate screen
-            if (profile.role == 'alumni') {
-              return _AlumniProfileScreen(
-                profile: profile,
-                onEditPressed: () => _navigateToEditScreen(profile),
-              );
-            }
+              final profile = snapshot.data!;
+              return profile.role == 'alumni'
+                  ? _AlumniProfileScreen(
+                      profile: profile,
+                      onEditPressed: () => _navigateToEditScreen(profile),
+                    )
+                  : _buildStudentProfile(profile);
+            },
+          ),
+        ),
+      ),
+    );
+  }
 
-            return CustomScrollView(
-              slivers: [
-                const _ProfileAppBar(),
-                SliverToBoxAdapter(
-                  child: _ProfileContent(
-                    profile: profile,
-                    onEditPressed: () => _navigateToEditScreen(profile),
-                    onRequestDocumentsPressed: _navigateToDocumentRequestScreen,
+  Widget _buildStudentProfile(UserProfile profile) {
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  CircleAvatar(
+                    radius: 50,
+                    backgroundColor: Colors.blue[800]!.withOpacity(0.1),
+                    child: Text(
+                      profile.name[0].toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue[800],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    profile.name,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  Text(
+                    profile.email,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Student Information',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue[800],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _InfoTile(
+                    icon: Icons.badge,
+                    label: 'Student Number',
+                    value: profile.studentNumber,
+                    color: Colors.blue[800]!,
+                  ),
+                  const Divider(height: 24),
+                  _InfoTile(
+                    icon: Icons.school,
+                    label: 'Course',
+                    value: profile.course,
+                    color: Colors.blue[800]!,
+                  ),
+                  const Divider(height: 24),
+                  _InfoTile(
+                    icon: Icons.phone,
+                    label: 'Contact',
+                    value: profile.contact,
+                    color: Colors.blue[800]!,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            _buildActionButtons(profile),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(UserProfile profile) {
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue[800],
+              foregroundColor: Colors.white,
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: _navigateToDocumentRequestScreen,
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.description),
+                SizedBox(width: 12),
+                Text(
+                  'Request Documents',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
-            );
-          },
+            ),
+          ),
         ),
-      ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: Colors.blue[800]!),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const RequestHistoryScreen(),
+                ),
+              );
+            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.history, color: Colors.blue[800]),
+                const SizedBox(width: 12),
+                Text(
+                  'Request History',
+                  style: TextStyle(
+                    color: Colors.blue[800],
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: Colors.blue[800]!),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: () => _navigateToEditScreen(profile),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.edit, color: Colors.blue[800]),
+                const SizedBox(width: 12),
+                Text(
+                  'Edit Profile',
+                  style: TextStyle(
+                    color: Colors.blue[800],
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        TextButton(
+          onPressed: () => _showLogoutDialog(context),
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.logout, color: Colors.red),
+              SizedBox(width: 8),
+              Text(
+                'Logout',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -735,6 +960,36 @@ class _AlumniProfileScreen extends StatelessWidget {
   Widget _buildActions(BuildContext context) {
     return Column(
       children: [
+        OutlinedButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const RequestHistoryScreen(),
+              ),
+            );
+          },
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.history, color: Theme.of(context).primaryColor),
+              const SizedBox(width: 8),
+              Text(
+                'Request History',
+                style: TextStyle(
+                  color: Theme.of(context).primaryColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
         OutlinedButton(
           onPressed: onEditPressed,
           style: OutlinedButton.styleFrom(

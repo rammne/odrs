@@ -152,7 +152,9 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
         'quantity': _quantity,
         'purpose': _purposeText,
         'status': 'Pending',
+        'processingLocation': null,
         'role': role,
+        'lastUpdated': FieldValue.serverTimestamp(),
       });
 
       // Generate and show receipt
@@ -190,280 +192,258 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        elevation: 0,
-        title: const Text("Request Documents",
-            style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.blueGrey[800],
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : errorMessage.isNotEmpty
-              ? Center(
-                  child: Text(errorMessage,
-                      style: const TextStyle(color: Colors.red)))
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Card(
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.blue[400]!, Colors.blue[800]!],
+          ),
+        ),
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : errorMessage.isNotEmpty
+                ? Center(
+                    child: Text(errorMessage,
+                        style: const TextStyle(color: Colors.red)))
+                : SingleChildScrollView(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 48),
+                        _buildCard(
+                          title: 'Personal Information',
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                "Personal Information",
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blueGrey,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
                               _infoRow("Name", name),
-                              const Divider(height: 16),
+                              const Divider(height: 24),
                               _infoRow("Student No.", studentNumber),
-                              const Divider(height: 16),
+                              const Divider(height: 24),
                               _infoRow("Contact No.", contact),
                             ],
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                      const Text(
-                        "Document Selection",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blueGrey,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Card(
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
+                        const SizedBox(height: 24),
+                        _buildCard(
+                          title: 'Document Selection',
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                "Select one document type:",
+                              Text(
+                                "Select document type:",
                                 style: TextStyle(
                                   fontSize: 16,
-                                  fontWeight: FontWeight.w500,
+                                  color: Colors.grey[600],
                                 ),
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: 16),
                               ..._documentCategories
-                                  .map((document) =>
-                                      _documentRadioTile(document))
+                                  .map((doc) => _buildDocumentRadio(doc))
                                   .toList(),
-                              if (_selectedDocument == "Certificate") ...[
-                                const SizedBox(height: 16),
-                                const Text(
-                                  "Select certificate type:",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12),
-                                  decoration: BoxDecoration(
-                                    border:
-                                        Border.all(color: Colors.grey.shade300),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: DropdownButtonHideUnderline(
-                                    child: DropdownButton<String>(
-                                      value: _selectedCertificateType,
-                                      isExpanded: true,
-                                      hint:
-                                          const Text("Select certificate type"),
-                                      items: _certificateTypes.map((type) {
-                                        return DropdownMenuItem<String>(
-                                          value: type,
-                                          child: Text(type),
-                                        );
-                                      }).toList(),
-                                      onChanged: (value) {
-                                        setState(() {
-                                          _selectedCertificateType = value;
-                                        });
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              ],
-                              if (_selectedDocument == "Other") ...[
-                                const SizedBox(height: 16),
-                                const Text(
-                                  "Please specify the document:",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                TextField(
-                                  controller: _otherController,
-                                  decoration: InputDecoration(
-                                    hintText: "Enter document name",
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 16),
-                                  ),
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _otherDocumentText = value;
-                                    });
-                                  },
-                                ),
-                              ],
-                              if (_selectedDocument != null) ...[
-                                const SizedBox(height: 24),
-                                Row(
-                                  children: [
-                                    const Text(
-                                      "Number of copies:",
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Container(
-                                      width: 120,
-                                      decoration: BoxDecoration(
-                                        border: Border.all(
-                                            color: Colors.grey.shade300),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          IconButton(
-                                            icon: const Icon(Icons.remove,
-                                                size: 20),
-                                            onPressed: () {
-                                              setState(() {
-                                                if (_quantity > 1) {
-                                                  _quantity--;
-                                                }
-                                              });
-                                            },
-                                            padding: EdgeInsets.zero,
-                                            constraints: const BoxConstraints(),
-                                          ),
-                                          Expanded(
-                                            child: Center(
-                                              child: Text(
-                                                '$_quantity',
-                                                style: const TextStyle(
-                                                    fontSize: 16),
-                                              ),
-                                            ),
-                                          ),
-                                          IconButton(
-                                            icon:
-                                                const Icon(Icons.add, size: 20),
-                                            onPressed: () {
-                                              setState(() {
-                                                _quantity++;
-                                              });
-                                            },
-                                            padding: EdgeInsets.zero,
-                                            constraints: const BoxConstraints(),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                              if (_selectedDocument == "Certificate")
+                                _buildCertificateDropdown(),
+                              if (_selectedDocument == "Other")
+                                _buildOtherDocumentField(),
+                              if (_selectedDocument != null)
+                                _buildQuantitySelector(),
                             ],
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                      const Text(
-                        "Purpose of Request",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blueGrey,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Card(
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              TextField(
-                                controller: _purposeController,
-                                decoration: InputDecoration(
-                                  hintText: "Enter the purpose of your request",
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 16),
-                                ),
-                                maxLines: 3,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _purposeText = value;
-                                  });
-                                },
+                        const SizedBox(height: 24),
+                        _buildCard(
+                          title: 'Purpose of Request',
+                          child: TextFormField(
+                            controller: _purposeController,
+                            maxLines: 3,
+                            decoration: InputDecoration(
+                              hintText: "Enter the purpose of your request",
+                              fillColor: Colors.grey[50],
+                              filled: true,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide:
+                                    BorderSide(color: Colors.grey[300]!),
                               ),
-                            ],
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide:
+                                    BorderSide(color: Colors.grey[300]!),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                    color: Colors.blue[800]!, width: 2),
+                              ),
+                            ),
+                            onChanged: (value) => _purposeText = value,
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blueGrey[700],
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                        const SizedBox(height: 32),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue[800],
+                              foregroundColor: Colors.white,
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
-                          ),
-                          onPressed: _submitRequest,
-                          child: const Text(
-                            "Submit Request",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                            onPressed: _submitRequest,
+                            child: const Text(
+                              "Submit Request",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
+      ),
+    );
+  }
+
+  Widget _buildCard({required String title, required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue[800],
+            ),
+          ),
+          const SizedBox(height: 20),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDocumentRadio(String docName) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: _selectedDocument == docName
+              ? Colors.blue[800]!
+              : Colors.grey[300]!,
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: RadioListTile<String>(
+        title: Text(docName),
+        value: docName,
+        groupValue: _selectedDocument,
+        onChanged: (value) => setState(() {
+          _selectedDocument = value;
+          if (value != "Certificate") {
+            _selectedCertificateType = null;
+          }
+        }),
+        activeColor: Colors.blue[800],
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      ),
+    );
+  }
+
+  Widget _buildCertificateDropdown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 16),
+        Text(
+          "Select certificate type:",
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.grey[600],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.grey[50],
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: _selectedCertificateType,
+              isExpanded: true,
+              hint: const Text("Select certificate type"),
+              items: _certificateTypes.map((type) {
+                return DropdownMenuItem<String>(
+                  value: type,
+                  child: Text(type),
+                );
+              }).toList(),
+              onChanged: (value) =>
+                  setState(() => _selectedCertificateType = value),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOtherDocumentField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 16),
+        Text(
+          "Specify the document:",
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.grey[600],
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _otherController,
+          decoration: InputDecoration(
+            hintText: "Enter the document name",
+            fillColor: Colors.grey[50],
+            filled: true,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.blue[800]!, width: 2),
+            ),
+          ),
+          onChanged: (value) => _otherDocumentText = value,
+        ),
+      ],
     );
   }
 
@@ -473,9 +453,9 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
-            color: Colors.grey,
+            color: Colors.grey[600],
           ),
         ),
         Text(
@@ -489,24 +469,52 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
     );
   }
 
-  Widget _documentRadioTile(String docName) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: RadioListTile<String>(
-        title: Text(docName),
-        value: docName,
-        groupValue: _selectedDocument,
-        onChanged: (String? value) {
-          setState(() {
-            _selectedDocument = value;
-            if (value != "Certificate") {
-              _selectedCertificateType = null;
-            }
-          });
-        },
-        activeColor: Colors.blueGrey[700],
-        contentPadding: const EdgeInsets.symmetric(horizontal: 0),
-      ),
+  Widget _buildQuantitySelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 24),
+        Text(
+          "Number of copies:",
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.grey[600],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.grey[50],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: Icon(Icons.remove, color: Colors.blue[800]),
+                onPressed: () {
+                  if (_quantity > 1) {
+                    setState(() => _quantity--);
+                  }
+                },
+              ),
+              const SizedBox(width: 16),
+              Text(
+                '$_quantity',
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(width: 16),
+              IconButton(
+                icon: Icon(Icons.add, color: Colors.blue[800]),
+                onPressed: () => setState(() => _quantity++),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

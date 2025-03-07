@@ -72,67 +72,151 @@ class _AlumniInfoScreenState extends State<AlumniInfoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Guest Information')),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _firstNameController,
-                decoration: const InputDecoration(
-                  labelText: 'First Name',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) => value!.isEmpty ? 'Required field' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _lastNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Last Name',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) => value!.isEmpty ? 'Required field' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _yearController,
-                decoration: const InputDecoration(
-                  labelText: 'Year Graduated',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.number,
-                validator: (value) => value!.isEmpty ? 'Required field' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _contactController,
-                decoration: const InputDecoration(
-                  labelText: 'Contact Number',
-                  border: OutlineInputBorder(),
-                  hintText: '09XXXXXXXXX',
-                ),
-                keyboardType: TextInputType.phone,
-                validator: _validateContact,
-              ),
-              const SizedBox(height: 24),
-              _isSaving
-                  ? const CircularProgressIndicator()
-                  : SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        onPressed: _saveInfo,
-                        child: const Text('CONTINUE'),
-                      ),
-                    ),
-            ],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.blue[400]!, Colors.blue[800]!],
           ),
         ),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.all(32),
+              width: 450,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Alumni Information',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue[800],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Please fill in your details',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    _buildTextField(
+                      controller: _firstNameController,
+                      label: 'First Name',
+                      icon: Icons.person_outline,
+                      validator: (value) =>
+                          value!.isEmpty ? 'Required field' : null,
+                    ),
+                    const SizedBox(height: 20),
+                    _buildTextField(
+                      controller: _lastNameController,
+                      label: 'Last Name',
+                      icon: Icons.person_outline,
+                      validator: (value) =>
+                          value!.isEmpty ? 'Required field' : null,
+                    ),
+                    const SizedBox(height: 20),
+                    _buildTextField(
+                      controller: _yearController,
+                      label: 'Year Graduated',
+                      icon: Icons.school_outlined,
+                      keyboardType: TextInputType.number,
+                      validator: (value) =>
+                          value!.isEmpty ? 'Required field' : null,
+                    ),
+                    const SizedBox(height: 20),
+                    _buildTextField(
+                      controller: _contactController,
+                      label: 'Contact Number',
+                      icon: Icons.phone_outlined,
+                      keyboardType: TextInputType.phone,
+                      validator: _validateContact,
+                      hintText: '09XXXXXXXXX',
+                    ),
+                    const SizedBox(height: 32),
+                    _isSaving
+                        ? const CircularProgressIndicator()
+                        : SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue[800],
+                                foregroundColor: Colors.white,
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              onPressed: _saveInfo,
+                              child: const Text(
+                                "Continue",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    String? Function(String?)? validator,
+    TextInputType? keyboardType,
+    String? hintText,
+  }) {
+    return TextFormField(
+      controller: controller,
+      validator: validator,
+      keyboardType: keyboardType,
+      style: const TextStyle(fontSize: 16),
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hintText,
+        labelStyle: TextStyle(color: Colors.grey[600]),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey[300]!),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.blue[800]!, width: 2),
+        ),
+        filled: true,
+        fillColor: Colors.grey[50],
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        prefixIcon: Icon(icon, color: Colors.grey[600]),
       ),
     );
   }

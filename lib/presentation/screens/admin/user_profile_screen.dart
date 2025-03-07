@@ -25,6 +25,103 @@ class AUserProfileScreen extends StatelessWidget {
     }
   }
 
+  String _getStatusText(Map<dynamic, dynamic> requestData) {
+    String status = requestData['status'] ?? 'Unknown';
+    if (status == 'Processing' && requestData['processingLocation'] != null) {
+      return '$status - currently in ${requestData['processingLocation']}';
+    }
+    return status;
+  }
+
+  void _updateStatus(
+      BuildContext context, String docId, String newStatus) async {
+    if (newStatus == 'Processing') {
+      String? location = await showDialog<String>(
+        context: context,
+        builder: (BuildContext context) {
+          String selectedLocation = 'Registrar\'s Office';
+          TextEditingController customLocationController =
+              TextEditingController();
+          bool isOtherOffice = false;
+
+          return StatefulBuilder(
+            builder: (context, setState) {
+              return AlertDialog(
+                title: const Text('Select Processing Location'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DropdownButton<String>(
+                      value: selectedLocation,
+                      isExpanded: true,
+                      items: [
+                        'Registrar\'s Office',
+                        'Principal\'s Office',
+                        'Guidance Office',
+                        'Department Office',
+                        'Other Office'
+                      ].map((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                      onChanged: (String? value) {
+                        setState(() {
+                          selectedLocation = value!;
+                          isOtherOffice = value == 'Other Office';
+                        });
+                      },
+                    ),
+                    if (isOtherOffice) ...[
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: customLocationController,
+                        decoration: const InputDecoration(
+                          labelText: 'Enter Office Name',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    child: const Text('Cancel'),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  TextButton(
+                    child: const Text('Confirm'),
+                    onPressed: () {
+                      String finalLocation = selectedLocation == 'Other Office'
+                          ? customLocationController.text.trim()
+                          : selectedLocation;
+                      Navigator.pop(context, finalLocation);
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      );
+
+      if (location != null && location.isNotEmpty) {
+        await _firestore.collection('document_requests').doc(docId).update({
+          'status': newStatus,
+          'processingLocation': location,
+          'lastUpdated': FieldValue.serverTimestamp(),
+        });
+      }
+    } else {
+      await _firestore.collection('document_requests').doc(docId).update({
+        'status': newStatus,
+        'processingLocation': null,
+        'lastUpdated': FieldValue.serverTimestamp(),
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,7 +142,7 @@ class AUserProfileScreen extends StatelessWidget {
           }
 
           final userData = userSnapshot.data!.data() as Map<String, dynamic>;
-          final studentNumber = userData['student_number'] ?? 'N/A';
+          final studentNumber = userData['student_number'] ?? 'N/A (Alumni)';
 
           return Column(
             children: [
@@ -181,64 +278,88 @@ class AUserProfileScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              child: ListTile(
-                contentPadding: const EdgeInsets.all(16),
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(status).withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.description,
-                    color: _getStatusColor(status),
-                  ),
-                ),
-                title: Text(
-                  requestData['documentName'] ?? 'Unknown Document',
-                  style: const TextStyle(fontWeight: FontWeight.w500),
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 8),
-                    Row(
+              child: Column(
+                children: [
+                  ListTile(
+                    contentPadding: const EdgeInsets.all(16),
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: _getStatusColor(status).withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.description,
+                        color: _getStatusColor(status),
+                      ),
+                    ),
+                    title: Text(
+                      requestData['documentName'] ?? 'Unknown Document',
+                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: _getStatusColor(status).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            status.toUpperCase(),
-                            style: TextStyle(
-                              color: _getStatusColor(status),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: _getStatusColor(status).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                _getStatusText(requestData).toUpperCase(),
+                                style: TextStyle(
+                                  color: _getStatusColor(status),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          formatTimestamp(date),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                          ),
+                            const Spacer(),
+                            Text(
+                              formatTimestamp(date),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
-                trailing: Icon(
-                  Icons.chevron_right,
-                  color: Colors.grey[400],
-                ),
-                onTap: () {
-                  // Add navigation to request details
-                },
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: DropdownButtonFormField<String>(
+                      value: status,
+                      decoration: const InputDecoration(
+                        labelText: 'Update Status',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: [
+                        'Pending',
+                        'Processing',
+                        'Ready for Pickup',
+                        'Completed',
+                        'Cancelled'
+                      ].map((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        if (newValue != null) {
+                          _updateStatus(context, request.id, newValue);
+                        }
+                      },
+                    ),
+                  ),
+                ],
               ),
             );
           },

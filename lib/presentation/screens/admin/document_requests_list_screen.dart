@@ -15,7 +15,7 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
   Stream<QuerySnapshot> getAllRequests() {
     Query query = _firestore
         .collection('document_requests')
-        .orderBy('dateRequested', descending: true);
+        .orderBy('lastUpdated', descending: true); // Order by lastUpdated field
 
     if (_selectedDate != null) {
       DateTime startOfDay = DateTime(
@@ -30,10 +30,93 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
   }
 
   void _updateStatus(String docId, String newStatus) async {
-    await _firestore
-        .collection('document_requests')
-        .doc(docId)
-        .update({'status': newStatus});
+    if (newStatus == 'Processing') {
+      String? location = await showDialog<String>(
+        context: context,
+        builder: (BuildContext context) {
+          String selectedLocation = 'Registrar\'s Office';
+          TextEditingController customLocationController =
+              TextEditingController();
+          bool isOtherOffice = false;
+
+          return StatefulBuilder(
+            builder: (context, setState) {
+              return AlertDialog(
+                title: const Text('Select Processing Location'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DropdownButton<String>(
+                      value: selectedLocation,
+                      isExpanded: true,
+                      items: [
+                        'Registrar\'s Office',
+                        'Principal\'s Office',
+                        'Guidance Office',
+                        'Department Office',
+                        'Other Office'
+                      ].map((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                      onChanged: (String? value) {
+                        setState(() {
+                          selectedLocation = value!;
+                          isOtherOffice = value == 'Other Office';
+                        });
+                      },
+                    ),
+                    if (isOtherOffice) ...[
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: customLocationController,
+                        decoration: const InputDecoration(
+                          labelText: 'Enter Office Name',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    child: const Text('Cancel'),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  TextButton(
+                    child: const Text('Confirm'),
+                    onPressed: () {
+                      String finalLocation = selectedLocation == 'Other Office'
+                          ? customLocationController.text.trim()
+                          : selectedLocation;
+                      Navigator.pop(context, finalLocation);
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      );
+
+      if (location != null && location.isNotEmpty) {
+        await _firestore.collection('document_requests').doc(docId).update({
+          'status': newStatus,
+          'processingLocation': location,
+          'lastUpdated':
+              FieldValue.serverTimestamp(), // Add timestamp when updated
+        });
+      }
+    } else {
+      await _firestore.collection('document_requests').doc(docId).update({
+        'status': newStatus,
+        'processingLocation': null,
+        'lastUpdated':
+            FieldValue.serverTimestamp(), // Add timestamp when updated
+      });
+    }
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -102,9 +185,19 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
                                   ?.toDate()
                                   .toString() ??
                               "Unknown"),
+                      _infoRow(
+                          "Last Updated",
+                          (data['lastUpdated'] as Timestamp?)
+                                  ?.toDate()
+                                  .toString() ??
+                              "Not yet updated"),
                       _documentInfo(data),
                       _purposeInfo(data),
                       _infoRow("Status", data['status'] ?? "Unknown"),
+                      if (data['status'] == 'Processing' &&
+                          data['processingLocation'] != null)
+                        _infoRow(
+                            "Processing Location", data['processingLocation']),
                       const SizedBox(height: 10),
                       _statusButtons(doc.id, data['status'] ?? ""),
                     ],
@@ -125,7 +218,12 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-          Text(value),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+            ),
+          ),
         ],
       ),
     );
@@ -185,23 +283,39 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
   }
 
   Widget _statusButtons(String docId, String currentStatus) {
-    if (currentStatus != "Pending") return const SizedBox.shrink();
-    return Row(
+    final List<String> statusOptions = [
+      'Pending',
+      'Processing',
+      'Ready for Pickup',
+      'Completed',
+      'Cancelled'
+    ];
+
+    return Column(
       children: [
-        Expanded(
-          child: ElevatedButton(
-            onPressed: () => _updateStatus(docId, "Approved"),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            child: const Text("Approve"),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: ElevatedButton(
-            onPressed: () => _updateStatus(docId, "Rejected"),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text("Reject"),
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: DropdownButtonFormField<String>(
+                value: currentStatus,
+                decoration: const InputDecoration(
+                  labelText: 'Update Status',
+                  border: OutlineInputBorder(),
+                ),
+                items: statusOptions.map((String status) {
+                  return DropdownMenuItem<String>(
+                    value: status,
+                    child: Text(status),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  if (newValue != null) {
+                    _updateStatus(docId, newValue);
+                  }
+                },
+              ),
+            ),
+          ],
         ),
       ],
     );
