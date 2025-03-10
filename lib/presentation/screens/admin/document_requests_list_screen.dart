@@ -212,6 +212,27 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
   }
 
   Widget _infoRow(String label, String value) {
+    Color? textColor;
+    if (label == "Status") {
+      switch (value) {
+        case 'Pending':
+          textColor = Colors.grey;
+          break;
+        case 'Processing':
+          textColor = Colors.green;
+          break;
+        case 'Ready for Pickup':
+          textColor = Colors.amber[700];
+          break;
+        case 'Completed':
+          textColor = Colors.blue;
+          break;
+        case 'Cancelled':
+          textColor = Colors.red;
+          break;
+      }
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -222,6 +243,7 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
             child: Text(
               value,
               textAlign: TextAlign.end,
+              style: TextStyle(color: textColor),
             ),
           ),
         ],

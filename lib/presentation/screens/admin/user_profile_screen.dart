@@ -13,12 +13,16 @@ class AUserProfileScreen extends StatelessWidget {
   }
 
   Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'approved':
+    switch (status) {
+      case 'Pending':
+        return Colors.grey;
+      case 'Processing':
         return Colors.green;
-      case 'pending':
-        return Colors.orange;
-      case 'rejected':
+      case 'Ready for Pickup':
+        return Colors.amber.shade700;
+      case 'Completed':
+        return Colors.blue;
+      case 'Cancelled':
         return Colors.red;
       default:
         return Colors.grey;
