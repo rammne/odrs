@@ -42,6 +42,7 @@ dependencies:
   path_provider: ^2.1.1
   open_file: ^3.3.2
   printing: ^5.11.0
+  rxdart: ^0.28.0
 
 dev_dependencies:
   flutter_test:

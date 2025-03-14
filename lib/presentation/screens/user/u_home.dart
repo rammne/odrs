@@ -12,7 +12,7 @@ class UserProfile {
   final String email;
   final String contact;
   final String studentNumber;
-  final String course;
+  final String strand; // Changed from course
   final String role;
   final String? yearGraduated; // New field for alumni
 
@@ -24,7 +24,7 @@ class UserProfile {
     required this.email,
     required this.contact,
     required this.studentNumber,
-    required this.course,
+    required this.strand, // Changed from course
     required this.role,
     this.yearGraduated,
   });
@@ -39,7 +39,7 @@ class UserProfile {
       email: data['email'] ?? '',
       contact: data['contact'] ?? '',
       studentNumber: data['student_number'] ?? '',
-      course: data['course'] ?? 'Undefined',
+      strand: data['strand'] ?? 'Undefined', // Changed from course
       role: data['role'] ?? 'user',
       yearGraduated: data['yearGraduated'],
     );
@@ -52,7 +52,7 @@ class UserProfile {
         'email': email,
         'contact': contact,
         'student_number': studentNumber,
-        'course': course,
+        'strand': strand, // Changed from course
         'role': role,
         'yearGraduated': yearGraduated,
       };
@@ -61,7 +61,7 @@ class UserProfile {
     String? name,
     String? contact,
     String? studentNumber,
-    String? course,
+    String? strand, // Changed from course
   }) {
     return UserProfile(
       uid: uid,
@@ -69,7 +69,7 @@ class UserProfile {
       email: email,
       contact: contact ?? this.contact,
       studentNumber: studentNumber ?? this.studentNumber,
-      course: course ?? this.course,
+      strand: strand ?? this.strand, // Changed from course
       role: role,
     );
   }
@@ -104,7 +104,7 @@ class UserRepository implements BaseUserRepository {
       'name': profile.name,
       'contact': profile.contact,
       'student_number': profile.studentNumber,
-      'course': profile.course,
+      'strand': profile.strand, // Changed from course
     };
 
     try {
@@ -270,8 +270,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   const Divider(height: 24),
                   _InfoTile(
                     icon: Icons.school,
-                    label: 'Course',
-                    value: profile.course,
+                    label: 'Strand', // Changed from Course
+                    value: profile.strand, // Changed from course
                     color: Colors.blue[800]!,
                   ),
                   const Divider(height: 24),
@@ -570,8 +570,8 @@ class _ProfileContent extends StatelessWidget {
                   const Divider(),
                   _InfoTile(
                     icon: Icons.school,
-                    label: 'Course',
-                    value: profile.course,
+                    label: 'Strand', // Changed from Course
+                    value: profile.strand, // Changed from course
                     color: Colors.orange,
                   ),
                   const Divider(),

@@ -58,6 +58,61 @@ class RequestReceiptGenerator {
       name: 'document_request_$requestId.pdf',
     );
   }
+
+  static Future<void> showReceipt({
+    required String requestId,
+    required String name,
+    required String studentNumber,
+    required String contact,
+    required Map<String, dynamic> documents,
+    required DateTime requestDate,
+    required String purpose,
+  }) async {
+    final pdf = pw.Document();
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Header(
+                level: 0,
+                child: pw.Text('Document Request Receipt',
+                    style: pw.TextStyle(fontSize: 20)),
+              ),
+              pw.Divider(),
+              pw.SizedBox(height: 20),
+              pw.Text('Request ID: $requestId'),
+              pw.Text('Date: ${requestDate.toString().split('.')[0]}'),
+              pw.SizedBox(height: 20),
+              pw.Text('Student Information:'),
+              pw.Text('Name: $name'),
+              pw.Text('Student Number: $studentNumber'),
+              pw.Text('Contact: $contact'),
+              pw.SizedBox(height: 20),
+              pw.Text('Requested Documents:'),
+              ...documents.entries
+                  .map((doc) => pw.Text('- ${doc.key} (${doc.value} copies)')),
+              pw.SizedBox(height: 20),
+              pw.Text('Purpose:'),
+              pw.Text(purpose),
+              pw.SizedBox(height: 40),
+              pw.Text(
+                  'Please present a copy (soft copy or hard copy) of this receipt when claiming your documents.'),
+              pw.Text('Note: Processing may take 3-5 working days.'),
+            ],
+          );
+        },
+      ),
+    );
+
+    await Printing.sharePdf(
+      bytes: await pdf.save(),
+      filename: 'document_request_$requestId.pdf',
+    );
+  }
 }
 
 // class PDFGenerator {

@@ -12,8 +12,13 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _requestIdController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   bool _isLoading = false;
+  bool _showSearch = false;
+  bool _isSearching = false;
+  Map<String, dynamic>? _requestDetails;
+  String? _searchError;
 
   Future<void> _login() async {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
@@ -159,10 +164,245 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  Future<void> _searchRequest() async {
+    final String requestId = _requestIdController.text.trim();
+    if (requestId.isEmpty) {
+      setState(() {
+        _searchError = "Please enter a Request ID";
+        _requestDetails = null;
+      });
+      return;
+    }
+
+    setState(() {
+      _isSearching = true;
+      _searchError = null;
+      _requestDetails = null;
+    });
+
+    try {
+      // Search in document_requests collection
+      final activeDoc = await FirebaseFirestore.instance
+          .collection('document_requests')
+          .where('requestId', isEqualTo: requestId)
+          .limit(1)
+          .get();
+
+      if (activeDoc.docs.isNotEmpty) {
+        setState(() {
+          _requestDetails = {
+            ...activeDoc.docs.first.data(),
+            'collection': 'document_requests',
+          };
+          _isSearching = false;
+        });
+        return;
+      }
+
+      // Search in completed_requests collection
+      final completedDoc = await FirebaseFirestore.instance
+          .collection('completed_requests')
+          .where('requestId', isEqualTo: requestId)
+          .limit(1)
+          .get();
+
+      if (completedDoc.docs.isNotEmpty) {
+        setState(() {
+          _requestDetails = {
+            ...completedDoc.docs.first.data(),
+            'collection': 'completed_requests',
+          };
+          _isSearching = false;
+        });
+        return;
+      }
+
+      // Search in deleted_requests collection
+      final deletedDoc = await FirebaseFirestore.instance
+          .collection('deleted_requests')
+          .where('requestId', isEqualTo: requestId)
+          .limit(1)
+          .get();
+
+      if (deletedDoc.docs.isNotEmpty) {
+        setState(() {
+          _requestDetails = {
+            ...deletedDoc.docs.first.data(),
+            'collection': 'deleted_requests',
+          };
+          _isSearching = false;
+        });
+        return;
+      }
+
+      // Document not found in any collection
+      setState(() {
+        _searchError = "Request not found";
+        _isSearching = false;
+      });
+    } catch (e) {
+      setState(() {
+        _searchError = "Error searching for request: ${e.toString()}";
+        _isSearching = false;
+      });
+    }
+  }
+
   void _showSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
+  }
+
+  Widget _buildRequestDetailsCard() {
+    if (_requestDetails == null) return const SizedBox.shrink();
+
+    String statusText;
+    Color statusColor;
+
+    // Determine status based on collection
+    final String collection = _requestDetails!['collection'] as String;
+
+    switch (collection) {
+      case 'completed_requests':
+        statusText = "Completed";
+        statusColor = Colors.green;
+        break;
+      case 'deleted_requests':
+        statusText = "Cancelled";
+        statusColor = Colors.red;
+        break;
+      case 'document_requests':
+        final String status =
+            _requestDetails!['status'] as String? ?? 'Unknown';
+        statusText = status;
+        switch (status.toLowerCase()) {
+          case 'pending':
+            statusColor = Colors.orange;
+            break;
+          case 'processing':
+            statusColor = Colors.blue;
+            break;
+          case 'approved':
+            statusColor = Colors.teal;
+            break;
+          case 'rejected':
+            statusColor = Colors.red;
+            break;
+          default:
+            statusColor = Colors.grey;
+        }
+        break;
+      default:
+        statusText = "Unknown";
+        statusColor = Colors.grey;
+    }
+
+    return Card(
+      elevation: 4,
+      margin: const EdgeInsets.only(top: 16, bottom: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Request Details',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue[800],
+              ),
+            ),
+            const Divider(),
+            const SizedBox(height: 8),
+            _buildDetailRow(
+                'Request ID', _requestDetails!['requestId'] ?? 'N/A'),
+            _buildDetailRow(
+                'Document Type', _requestDetails!['documentName'] ?? 'N/A'),
+            _buildDetailRow('Requested By', _requestDetails!['name'] ?? 'N/A'),
+            _buildDetailRow('Date Requested',
+                _formatTimestamp(_requestDetails!['dateRequested'])),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Text(
+                  'Status: ',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: statusColor),
+                  ),
+                  child: Text(
+                    statusText,
+                    style: TextStyle(
+                      color: statusColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (_requestDetails!['remarks'] != null &&
+                _requestDetails!['remarks'].toString().isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: _buildDetailRow('Remarks', _requestDetails!['remarks']),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$label: ',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                color: Colors.black87,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatTimestamp(dynamic timestamp) {
+    if (timestamp == null) return 'N/A';
+
+    try {
+      if (timestamp is Timestamp) {
+        final DateTime dateTime = timestamp.toDate();
+        return '${dateTime.day}/${dateTime.month}/${dateTime.year}, ${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
+      } else {
+        return timestamp.toString();
+      }
+    } catch (e) {
+      return 'Invalid date';
+    }
   }
 
   @override
@@ -279,8 +519,89 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                             ),
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 50,
+                              child: OutlinedButton.icon(
+                                icon: Icon(
+                                  Icons.search,
+                                  color: Colors.blue[800],
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  side: BorderSide(color: Colors.blue[800]!),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _showSearch = !_showSearch;
+                                    if (!_showSearch) {
+                                      _requestIdController.clear();
+                                      _requestDetails = null;
+                                      _searchError = null;
+                                    }
+                                  });
+                                },
+                                label: Text(
+                                  "Quick Search",
+                                  style: TextStyle(
+                                    color: Colors.blue[800],
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
+                  if (_showSearch) ...[
+                    const SizedBox(height: 24),
+                    const Divider(),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Track Your Document Request',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue[800],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _requestIdController,
+                      decoration: InputDecoration(
+                        labelText: "Request ID",
+                        hintText: "Enter your request ID",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        prefixIcon: const Icon(Icons.description_outlined),
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.search),
+                          onPressed: _searchRequest,
+                        ),
+                      ),
+                      onSubmitted: (_) => _searchRequest(),
+                    ),
+                    if (_isSearching)
+                      const Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: CircularProgressIndicator(),
+                      ),
+                    if (_searchError != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: Text(
+                          _searchError!,
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    _buildRequestDetailsCard(),
+                  ],
                 ],
               ),
             ),

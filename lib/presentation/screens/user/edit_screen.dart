@@ -32,7 +32,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _name = widget.profile.name;
     _contact = widget.profile.contact;
     _studentNumber = widget.profile.studentNumber;
-    _course = widget.profile.course;
+    _course = widget.profile.strand;
     _firstName = widget.profile.firstName;
     _lastName = widget.profile.lastName;
     _yearGraduated = widget.profile.yearGraduated;
@@ -56,7 +56,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         email: widget.profile.email,
         contact: _contact,
         studentNumber: _studentNumber,
-        course: _course,
+        strand: _course,
         role: widget.profile.role,
         yearGraduated: _yearGraduated,
       );

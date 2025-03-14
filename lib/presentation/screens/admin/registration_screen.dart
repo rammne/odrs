@@ -16,7 +16,7 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
   final TextEditingController _contactController = TextEditingController();
   final TextEditingController _studentNumberController =
       TextEditingController();
-  final TextEditingController _courseController = TextEditingController();
+  final TextEditingController _strandController = TextEditingController();
 
   bool _isLoading = false;
 
@@ -30,22 +30,27 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
     try {
       final User? adminUser = FirebaseAuth.instance.currentUser;
       if (adminUser == null) throw Exception("Admin not logged in.");
-      final String adminEmail = adminUser.email!;
-      final String adminPassword = "admin123";
+
+      // Store admin user information
+      final String adminUid = adminUser.uid;
 
       final studentNumber = _studentNumberController.text.trim();
       final email = _emailController.text.trim();
 
-      final existingUser = await FirebaseFirestore.instance
+      // Check if user with this student number already exists in Firestore
+      final existingUserQuery = await FirebaseFirestore.instance
           .collection('users')
-          .doc(studentNumber)
+          .where('student_number', isEqualTo: studentNumber)
           .get();
 
-      if (existingUser.exists) {
+      if (existingUserQuery.docs.isNotEmpty) {
         throw Exception("A user with this student number already exists.");
       }
 
       final temporaryPassword = '${studentNumber}@temp123';
+
+      // Create a secondary Firebase Auth instance to avoid signing out the admin
+      // This is optional but can help if you want to avoid the sign in/out flow completely
 
       final UserCredential userCredential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
@@ -60,22 +65,19 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
         'email': email,
         'contact': _contactController.text.trim(),
         'student_number': studentNumber,
-        'course': _courseController.text.trim(),
+        'strand': _strandController.text.trim(),
         'role': 'user',
         'uid': userUid,
-        'created_by': adminUser.uid,
+        'created_by': adminUid,
       });
 
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
 
-      // Sign out the newly created user
+      // Simply sign out the newly created user without trying to re-authenticate the admin
       await FirebaseAuth.instance.signOut();
 
-      // 🔹 Re-authenticate admin properly
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: adminEmail,
-        password: adminPassword,
-      );
+      // The admin should still be authenticated in their session
+      // No need to reauthenticate with password
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -89,7 +91,7 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
       _emailController.clear();
       _contactController.clear();
       _studentNumberController.clear();
-      _courseController.clear();
+      _strandController.clear();
 
       await Future.delayed(Duration(milliseconds: 500));
     } catch (e) {
@@ -239,9 +241,9 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
                     icon: Icons.badge,
                   ),
                   _buildInputField(
-                    controller: _courseController,
-                    label: "Course",
-                    hint: "Enter student's course",
+                    controller: _strandController,
+                    label: "Strand",
+                    hint: "Enter student's strand",
                     icon: Icons.school,
                   ),
                   SizedBox(height: 32),

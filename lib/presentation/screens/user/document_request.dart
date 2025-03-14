@@ -96,6 +96,20 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
     }
   }
 
+  String generateRequestId() {
+    // Get current timestamp
+    final now = DateTime.now();
+    // Format: REQ-YYYYMMDD-HHMMSS-XXXX where X is random number
+    final timestamp =
+        "${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}";
+    // "-${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}${now.second.toString().padLeft(2, '0')}";
+    // Generate random 4-digit number
+    final random =
+        (1000 + DateTime.now().millisecond + DateTime.now().microsecond) %
+            10000;
+    return "REQ-$timestamp-${random.toString().padLeft(4, '0')}";
+  }
+
   void _submitRequest() async {
     // Validate input
     if (_selectedDocument == null) {
@@ -140,9 +154,12 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
         isLoading = true;
       });
 
+      final String requestId = generateRequestId();
+
       // Add the document request
       DocumentReference docRef =
           await _firestore.collection('document_requests').add({
+        'requestId': requestId,
         'userId': _auth.currentUser?.uid,
         'name': name,
         'studentNumber': studentNumber,
@@ -153,13 +170,14 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
         'purpose': _purposeText,
         'status': 'Pending',
         'processingLocation': null,
+        'cancellationReason': null,
         'role': role,
         'lastUpdated': FieldValue.serverTimestamp(),
       });
 
       // Generate and show receipt
       await RequestReceiptGenerator.generateReceipt(
-        requestId: docRef.id,
+        requestId: requestId,
         name: name,
         studentNumber: studentNumber,
         contact: contact,

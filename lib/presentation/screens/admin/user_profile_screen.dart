@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:rxdart/rxdart.dart';
 
 class AUserProfileScreen extends StatelessWidget {
   final String userId;
@@ -33,6 +34,9 @@ class AUserProfileScreen extends StatelessWidget {
     String status = requestData['status'] ?? 'Unknown';
     if (status == 'Processing' && requestData['processingLocation'] != null) {
       return '$status - currently in ${requestData['processingLocation']}';
+    } else if (status == 'Cancelled' &&
+        requestData['cancellationReason'] != null) {
+      return '$status - ${requestData['cancellationReason']}';
     }
     return status;
   }
@@ -244,28 +248,46 @@ class AUserProfileScreen extends StatelessWidget {
   }
 
   Widget _buildRequestList(String studentNumber) {
-    return StreamBuilder(
-      stream: _firestore
-          .collection('document_requests')
-          .where('studentNumber', isEqualTo: studentNumber)
-          .snapshots(),
-      builder: (context, requestSnapshot) {
-        if (requestSnapshot.connectionState == ConnectionState.waiting) {
+    return StreamBuilder<List<QuerySnapshot>>(
+      stream: _getAllRequests(studentNumber),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return _buildLoadingState();
         }
-        if (!requestSnapshot.hasData || requestSnapshot.data!.docs.isEmpty) {
+        if (!snapshot.hasData) {
           return _buildEmptyState();
         }
 
-        final requests = requestSnapshot.data!.docs;
+        final activeRequests = snapshot.data![0].docs;
+        final completedRequests = snapshot.data![1].docs;
+        final deletedRequests = snapshot.data![2].docs;
+
+        final allRequests = [
+          ...activeRequests,
+          ...completedRequests,
+          ...deletedRequests,
+        ];
+
+        if (allRequests.isEmpty) {
+          return _buildEmptyState();
+        }
+
+        // Sort by date (newest first)
+        allRequests.sort((a, b) {
+          final aDate =
+              (a.data() as Map<String, dynamic>)['dateRequested'] as Timestamp;
+          final bDate =
+              (b.data() as Map<String, dynamic>)['dateRequested'] as Timestamp;
+          return bDate.compareTo(aDate);
+        });
 
         return ListView.separated(
           padding: const EdgeInsets.all(16),
-          itemCount: requests.length,
+          itemCount: allRequests.length,
           separatorBuilder: (context, index) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
-            final request = requests[index];
-            final requestData = request.data() as Map;
+            final requestData =
+                allRequests[index].data() as Map<String, dynamic>;
             final status = requestData['status'] ?? 'Unknown';
             final date = requestData['dateRequested'] as Timestamp;
 
@@ -338,30 +360,8 @@ class AUserProfileScreen extends StatelessWidget {
                   ),
                   Padding(
                     padding: const EdgeInsets.all(16.0),
-                    child: DropdownButtonFormField<String>(
-                      value: status,
-                      decoration: const InputDecoration(
-                        labelText: 'Update Status',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: [
-                        'Pending',
-                        'Processing',
-                        'Ready for Pickup',
-                        'Completed',
-                        'Cancelled'
-                      ].map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        if (newValue != null) {
-                          _updateStatus(context, request.id, newValue);
-                        }
-                      },
-                    ),
+                    child:
+                        _statusButtons(context, allRequests[index].id, status),
                   ),
                 ],
               ),
@@ -370,6 +370,73 @@ class AUserProfileScreen extends StatelessWidget {
         );
       },
     );
+  }
+
+  Widget _statusButtons(
+      BuildContext context, String docId, String currentStatus) {
+    final List<String> statusOptions = [
+      'Pending',
+      'Processing',
+      'Ready for Pickup',
+      'Completed',
+      'Cancelled'
+    ];
+
+    final bool isDisabled =
+        currentStatus == 'Completed' || currentStatus == 'Cancelled';
+
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: AbsorbPointer(
+                absorbing: isDisabled,
+                child: DropdownButtonFormField<String>(
+                  value: currentStatus,
+                  decoration: InputDecoration(
+                    labelText: isDisabled ? 'Status (Final)' : 'Update Status',
+                    border: const OutlineInputBorder(),
+                    filled: isDisabled,
+                    fillColor: Colors.grey[200],
+                  ),
+                  items: statusOptions.map((String status) {
+                    return DropdownMenuItem<String>(
+                      value: status,
+                      child: Text(status),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    if (newValue != null) {
+                      _updateStatus(context, docId, newValue);
+                    }
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Stream<List<QuerySnapshot>> _getAllRequests(String studentNumber) {
+    final activeRequests = _firestore
+        .collection('document_requests')
+        .where('studentNumber', isEqualTo: studentNumber)
+        .snapshots();
+
+    final completedRequests = _firestore
+        .collection('completed_requests')
+        .where('studentNumber', isEqualTo: studentNumber)
+        .snapshots();
+
+    final deletedRequests = _firestore
+        .collection('deleted_requests')
+        .where('studentNumber', isEqualTo: studentNumber)
+        .snapshots();
+    return CombineLatestStream.list(
+        [activeRequests, completedRequests, deletedRequests]);
   }
 
   Widget _buildSectionTitle(String title) {
