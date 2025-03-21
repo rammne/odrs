@@ -43,6 +43,56 @@ class AUserProfileScreen extends StatelessWidget {
 
   void _updateStatus(
       BuildContext context, String docId, String newStatus) async {
+    if (newStatus == 'Cancelled' || newStatus == 'Completed') {
+      bool? confirm = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Warning: Confirm ${newStatus} Status'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.amber,
+                  size: 48,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Are you sure you want to mark this request as ${newStatus.toLowerCase()}?',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'This action cannot be undone and the status cannot be changed afterwards.',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                child: const Text('Cancel'),
+                onPressed: () => Navigator.pop(context, false),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                ),
+                child: Text('Yes, mark as $newStatus'),
+                onPressed: () => Navigator.pop(context, true),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (confirm != true) return;
+    }
+
     if (newStatus == 'Processing') {
       String? location = await showDialog<String>(
         context: context,
@@ -121,6 +171,90 @@ class AUserProfileScreen extends StatelessWidget {
           'lastUpdated': FieldValue.serverTimestamp(),
         });
       }
+    } else if (newStatus == 'Cancelled') {
+      String? reason = await showDialog<String>(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          final TextEditingController reasonController =
+              TextEditingController();
+          return AlertDialog(
+            title: const Text('Cancellation Reason'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Please provide a reason for cancellation:'),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: reasonController,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'Enter reason here',
+                  ),
+                  maxLines: 3,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                child: const Text('Cancel'),
+                onPressed: () => Navigator.pop(context),
+              ),
+              TextButton(
+                child: const Text('Submit'),
+                onPressed: () {
+                  if (reasonController.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please enter a reason')),
+                    );
+                    return;
+                  }
+                  Navigator.pop(context, reasonController.text.trim());
+                },
+              ),
+            ],
+          );
+        },
+      );
+
+      if (reason != null && reason.isNotEmpty) {
+        DocumentSnapshot doc =
+            await _firestore.collection('document_requests').doc(docId).get();
+        Map<String, dynamic> requestData = doc.data() as Map<String, dynamic>;
+
+        await _firestore.collection('deleted_requests').add({
+          ...requestData,
+          'status': newStatus,
+          'cancellationReason': reason,
+          'deletedAt': FieldValue.serverTimestamp(),
+          'originalDocId': docId,
+        });
+
+        await _firestore.collection('document_requests').doc(docId).delete();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Request cancelled and moved to deleted requests')),
+        );
+      }
+    } else if (newStatus == 'Completed') {
+      DocumentSnapshot doc =
+          await _firestore.collection('document_requests').doc(docId).get();
+      Map<String, dynamic> requestData = doc.data() as Map<String, dynamic>;
+
+      await _firestore.collection('completed_requests').add({
+        ...requestData,
+        'status': newStatus,
+        'completedAt': FieldValue.serverTimestamp(),
+        'originalDocId': docId,
+      });
+
+      await _firestore.collection('document_requests').doc(docId).delete();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Request marked as completed and archived')),
+      );
     } else {
       await _firestore.collection('document_requests').doc(docId).update({
         'status': newStatus,
@@ -319,9 +453,30 @@ class AUserProfileScreen extends StatelessWidget {
                         color: _getStatusColor(status),
                       ),
                     ),
-                    title: Text(
-                      requestData['documentName'] ?? 'Unknown Document',
-                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    title: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                requestData['documentName'] ??
+                                    'Unknown Document',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w500),
+                              ),
+                              Text(
+                                '${requestData['quantity']} copies · ${requestData['copyType'] ?? 'Original'} copy',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.normal,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

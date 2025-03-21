@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:odrs/presentation/screens/user/edit_screen.dart';
 import 'package:odrs/presentation/screens/user/profile_page.dart';
+import 'package:odrs/presentation/screens/user/report_screen.dart';
 import 'package:odrs/presentation/screens/user/request_history_screen.dart';
 
 class UserProfile {
@@ -262,6 +263,19 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             onTap: () {
               Navigator.pop(context);
               _navigateToEditScreen(profile);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.bug_report),
+            title: const Text('Report'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ReportScreen(),
+                ),
+              );
             },
           ),
           const Divider(),

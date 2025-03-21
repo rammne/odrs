@@ -50,6 +50,12 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
     "Other" // For custom document requests
   ];
 
+  String _copyType = "Hard Copy"; // Add this new field
+  final List<String> _copyTypes = [
+    "Hard Copy",
+    "Soft Copy"
+  ]; // Add copy type options
+
   @override
   void initState() {
     super.initState();
@@ -173,6 +179,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
         'cancellationReason': null,
         'role': role,
         'lastUpdated': FieldValue.serverTimestamp(),
+        'copyType': _copyType, // Add this new field
       });
 
       // Generate and show receipt
@@ -184,6 +191,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
         documents: {finalDocumentName: _quantity},
         requestDate: DateTime.now(),
         purpose: _purposeText,
+        copyType: _copyType, // Add this parameter
       );
 
       setState(() {
@@ -530,6 +538,36 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                 onPressed: () => setState(() => _quantity++),
               ),
             ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        Text(
+          "Copy Type:",
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.grey[600],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.grey[50],
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: _copyType,
+              isExpanded: true,
+              items: _copyTypes.map((type) {
+                return DropdownMenuItem<String>(
+                  value: type,
+                  child: Text(type),
+                );
+              }).toList(),
+              onChanged: (value) => setState(() => _copyType = value!),
+            ),
           ),
         ),
       ],

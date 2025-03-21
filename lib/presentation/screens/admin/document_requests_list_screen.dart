@@ -38,6 +38,56 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
   }
 
   void _updateStatus(String docId, String newStatus) async {
+    if (newStatus == 'Cancelled' || newStatus == 'Completed') {
+      bool? confirm = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Warning: Confirm ${newStatus} Status'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.amber,
+                  size: 48,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Are you sure you want to mark this request as ${newStatus.toLowerCase()}?',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'This action cannot be undone and the status cannot be changed afterwards.',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                child: const Text('Cancel'),
+                onPressed: () => Navigator.pop(context, false),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                ),
+                child: Text('Yes, mark as $newStatus'),
+                onPressed: () => Navigator.pop(context, true),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (confirm != true) return;
+    }
+
     if (newStatus == 'Processing') {
       String? location = await showDialog<String>(
         context: context,
@@ -400,7 +450,8 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
             child: Text("Document Requested:",
                 style: TextStyle(fontWeight: FontWeight.bold)),
           ),
-          Text("${data['documentName']} (${data['quantity']} copies)"),
+          Text(
+              "${data['documentName']} (${data['quantity']} copies, ${data['copyType'] ?? 'Original'})"),
         ],
       );
     } else if (data.containsKey('documents')) {

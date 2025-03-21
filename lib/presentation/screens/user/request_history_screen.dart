@@ -60,7 +60,6 @@ class RequestHistoryScreen extends StatelessWidget {
                   return const Center(child: Text('No requests found.'));
                 }
 
-                // Combine all documents from different collections
                 final activeRequests = snapshot.data![0].docs;
                 final completedRequests = snapshot.data![1].docs;
                 final deletedRequests = snapshot.data![2].docs;
@@ -89,8 +88,6 @@ class RequestHistoryScreen extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final requestData =
                         allRequests[index].data() as Map<String, dynamic>;
-
-                    // Debugging: Check if `documents` field exists
                     if (!requestData.containsKey('documents')) {
                       print(
                           'DEBUG: Missing "documents" field in Firestore document: $requestData');
@@ -168,6 +165,7 @@ class RequestHistoryScreen extends StatelessWidget {
                                           requestData['dateRequested'].toDate(),
                                       purpose: requestData['purpose'] ??
                                           'Not specified',
+                                      copyType: 'original',
                                     );
                                   },
                                 ),

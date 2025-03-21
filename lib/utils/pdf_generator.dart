@@ -11,6 +11,7 @@ class RequestReceiptGenerator {
     required Map<String, int> documents,
     required DateTime requestDate,
     required String purpose, // Add this parameter
+    required String copyType, // Add this parameter
   }) async {
     final pdf = pw.Document();
 
@@ -42,6 +43,8 @@ class RequestReceiptGenerator {
               pw.SizedBox(height: 20),
               pw.Text('Purpose:'),
               pw.Text(purpose), // Add purpose to the receipt
+              pw.SizedBox(height: 20),
+              pw.Text('Copy Type: $copyType'), // Add copy type to the receipt
               pw.SizedBox(height: 40),
               pw.Text(
                   'Please present a copy (soft copy or hard copy) of this receipt when claiming your documents.'),
@@ -67,6 +70,7 @@ class RequestReceiptGenerator {
     required Map<String, dynamic> documents,
     required DateTime requestDate,
     required String purpose,
+    required String copyType, // Add this parameter
   }) async {
     final pdf = pw.Document();
 
@@ -98,6 +102,8 @@ class RequestReceiptGenerator {
               pw.SizedBox(height: 20),
               pw.Text('Purpose:'),
               pw.Text(purpose),
+              pw.SizedBox(height: 20),
+              pw.Text('Copy Type: $copyType'), // Add copy type to the receipt
               pw.SizedBox(height: 40),
               pw.Text(
                   'Please present a copy (soft copy or hard copy) of this receipt when claiming your documents.'),

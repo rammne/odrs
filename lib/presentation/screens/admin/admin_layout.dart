@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'document_requests_list_screen.dart';
 import 'user_management_screen.dart';
 import 'registration_screen.dart';
+import 'reports_screen.dart'; // Add this import
 
 class AdminLayout extends StatefulWidget {
   const AdminLayout({super.key});
@@ -18,6 +19,7 @@ class _AdminLayoutState extends State<AdminLayout> {
     const DocumentRequestsScreen(),
     const UserManagementScreen(),
     AdminRegisterUserScreen(),
+    const ReportsScreen(), // Add this line
   ];
 
   Future<void> _showLogoutConfirmation() async {
@@ -79,6 +81,11 @@ class _AdminLayoutState extends State<AdminLayout> {
               NavigationRailDestination(
                 icon: Icon(Icons.person_add),
                 label: Text('Register'),
+              ),
+              NavigationRailDestination(
+                // Add this destination
+                icon: Icon(Icons.bug_report),
+                label: Text('Reports'),
               ),
             ],
             trailing: Expanded(
