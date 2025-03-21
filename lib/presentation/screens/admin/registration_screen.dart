@@ -16,7 +16,43 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
   final TextEditingController _contactController = TextEditingController();
   final TextEditingController _studentNumberController =
       TextEditingController();
-  final TextEditingController _strandController = TextEditingController();
+
+  String? _selectedStrand;
+  String? _selectedGradeLevel;
+
+  final List<Map<String, String>> _strands = [
+    {
+      'value': 'STEM',
+      'label': 'STEM (Science, Technology, Engineering and Mathematics)'
+    },
+    {'value': 'HUMSS', 'label': 'HUMSS (Humanities & Social Sciences)'},
+    {'value': 'ABM', 'label': 'ABM (Accountancy, Business & Management)'},
+    {
+      'value': 'TVL-ICT',
+      'label': 'TVL-ICT (Information and Communication Technology)'
+    },
+    {'value': 'TVL-HE', 'label': 'TVL-HE (Home Economics)'},
+    {'value': 'ADT', 'label': 'ADT (Arts and Design Track)'},
+  ];
+
+  final List<String> _gradeLevels = [
+    'Preschool',
+    'Grade 1',
+    'Grade 2',
+    'Grade 3',
+    'Grade 4',
+    'Grade 5',
+    'Grade 6',
+    'Grade 7',
+    'Grade 8',
+    'Grade 9',
+    'Grade 10',
+    'Grade 11',
+    'Grade 12'
+  ];
+
+  bool get _isStrandRequired =>
+      _selectedGradeLevel == 'Grade 11' || _selectedGradeLevel == 'Grade 12';
 
   bool _isLoading = false;
 
@@ -62,7 +98,8 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
         'email': email,
         'contact': _contactController.text.trim(),
         'student_number': studentNumber,
-        'strand': _strandController.text.trim(),
+        'grade_level': _selectedGradeLevel,
+        'strand': _isStrandRequired ? _selectedStrand : null,
         'role': 'user',
         'uid': userUid,
         'created_by': adminUid,
@@ -83,7 +120,11 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
       _emailController.clear();
       _contactController.clear();
       _studentNumberController.clear();
-      _strandController.clear();
+
+      setState(() {
+        _selectedGradeLevel = null;
+        _selectedStrand = null;
+      });
 
       await Future.delayed(Duration(milliseconds: 500));
     } catch (e) {
@@ -167,6 +208,90 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
     );
   }
 
+  Widget _buildStrandDropdown() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: DropdownButtonFormField<String>(
+        value: _selectedStrand,
+        decoration: InputDecoration(
+          labelText: 'Strand',
+          prefixIcon: Icon(Icons.school, color: Colors.blueGrey[700]),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.blueGrey.shade200),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.blueGrey.shade200),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.blueGrey.shade700, width: 2),
+          ),
+          filled: true,
+          fillColor: Colors.grey[50],
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+        items: _strands.map((strand) {
+          return DropdownMenuItem<String>(
+            value: strand['value'],
+            child: Text(strand['label']!),
+          );
+        }).toList(),
+        onChanged: (value) {
+          setState(() {
+            _selectedStrand = value;
+          });
+        },
+        validator: (value) => value == null ? "Please select a strand" : null,
+      ),
+    );
+  }
+
+  Widget _buildGradeLevelDropdown() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: DropdownButtonFormField<String>(
+        value: _selectedGradeLevel,
+        decoration: InputDecoration(
+          labelText: 'Grade Level',
+          prefixIcon: Icon(Icons.grade, color: Colors.blueGrey[700]),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.blueGrey.shade200),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.blueGrey.shade200),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.blueGrey.shade700, width: 2),
+          ),
+          filled: true,
+          fillColor: Colors.grey[50],
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+        items: _gradeLevels.map((grade) {
+          return DropdownMenuItem<String>(
+            value: grade,
+            child: Text(grade),
+          );
+        }).toList(),
+        onChanged: (value) {
+          setState(() {
+            _selectedGradeLevel = value;
+            if (!_isStrandRequired) {
+              _selectedStrand = null;
+            }
+          });
+        },
+        validator: (value) =>
+            value == null ? "Please select a grade level" : null,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -233,12 +358,8 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
                     hint: "Enter student ID number",
                     icon: Icons.badge,
                   ),
-                  _buildInputField(
-                    controller: _strandController,
-                    label: "Strand",
-                    hint: "Enter student's strand",
-                    icon: Icons.school,
-                  ),
+                  _buildGradeLevelDropdown(),
+                  if (_isStrandRequired) _buildStrandDropdown(),
                   SizedBox(height: 32),
                   SizedBox(
                     height: 50,
