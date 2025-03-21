@@ -17,6 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _showSearch = false;
   bool _isSearching = false;
+  bool _showPassword = false;
   Map<String, dynamic>? _requestDetails;
   String? _searchError;
 
@@ -615,8 +616,9 @@ class _LoginScreenState extends State<LoginScreen> {
       String label, TextEditingController controller, bool isPassword) {
     return TextFormField(
       controller: controller,
-      obscureText: isPassword,
+      obscureText: isPassword && !_showPassword,
       style: const TextStyle(fontSize: 16),
+      onFieldSubmitted: (_) => _login(),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(color: Colors.grey[600]),
@@ -636,6 +638,19 @@ class _LoginScreenState extends State<LoginScreen> {
           isPassword ? Icons.lock_outline : Icons.email_outlined,
           color: Colors.grey[600],
         ),
+        suffixIcon: isPassword
+            ? IconButton(
+                icon: Icon(
+                  _showPassword ? Icons.visibility : Icons.visibility_off,
+                  color: Colors.grey[600],
+                ),
+                onPressed: () {
+                  setState(() {
+                    _showPassword = !_showPassword;
+                  });
+                },
+              )
+            : null,
       ),
     );
   }
