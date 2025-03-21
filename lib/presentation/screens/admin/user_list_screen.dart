@@ -9,7 +9,6 @@ class UserManagementScreen extends StatelessWidget {
   final userRepository = UserRepository();
 
   Stream<QuerySnapshot> getUsers() {
-    print('Fetching users from Firestore...'); // Debug print
     return FirebaseFirestore.instance
         .collection('users')
         .where('role', isEqualTo: 'user') // Only fetch users with role = "user"
@@ -22,7 +21,6 @@ class UserManagementScreen extends StatelessWidget {
       stream: getUsers(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          print('Error: ${snapshot.error}'); // Debug print
           return Center(child: Text('Error: ${snapshot.error}'));
         }
 
@@ -31,12 +29,8 @@ class UserManagementScreen extends StatelessWidget {
         }
 
         if (!snapshot.hasData) {
-          print('No data received from Firestore'); // Debug print
           return const Center(child: Text("No data received from Firestore"));
         }
-
-        print(
-            'Number of documents: ${snapshot.data!.docs.length}'); // Debug print
 
         if (snapshot.data!.docs.isEmpty) {
           return const Center(child: Text("No users found."));

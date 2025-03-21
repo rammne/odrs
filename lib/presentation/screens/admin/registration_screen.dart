@@ -28,16 +28,15 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
     });
 
     try {
+      // Verify admin authentication
       final User? adminUser = FirebaseAuth.instance.currentUser;
       if (adminUser == null) throw Exception("Admin not logged in.");
 
-      // Store admin user information
       final String adminUid = adminUser.uid;
-
       final studentNumber = _studentNumberController.text.trim();
       final email = _emailController.text.trim();
 
-      // Check if user with this student number already exists in Firestore
+      // Check for existing student number
       final existingUserQuery = await FirebaseFirestore.instance
           .collection('users')
           .where('student_number', isEqualTo: studentNumber)
@@ -49,9 +48,6 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
 
       final temporaryPassword = '${studentNumber}@temp123';
 
-      // Create a secondary Firebase Auth instance to avoid signing out the admin
-      // This is optional but can help if you want to avoid the sign in/out flow completely
-
       final UserCredential userCredential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
@@ -60,6 +56,7 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
 
       final userUid = userCredential.user!.uid;
 
+      // Store user data in Firestore
       await FirebaseFirestore.instance.collection('users').doc(userUid).set({
         'name': _nameController.text.trim(),
         'email': email,
@@ -72,12 +69,7 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
       });
 
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-
-      // Simply sign out the newly created user without trying to re-authenticate the admin
       await FirebaseAuth.instance.signOut();
-
-      // The admin should still be authenticated in their session
-      // No need to reauthenticate with password
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -95,6 +87,7 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
 
       await Future.delayed(Duration(milliseconds: 500));
     } catch (e) {
+      // Handle errors
       print("Error: $e");
       String errorMessage = 'Registration failed';
 

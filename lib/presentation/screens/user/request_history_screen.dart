@@ -39,6 +39,7 @@ class RequestHistoryScreen extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
+      backgroundColor: Colors.lightBlue[50],
       appBar: AppBar(
         title: const Text('Request History'),
       ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'document_requests_list_screen.dart';
 import 'user_management_screen.dart';
-import 'registration_screen.dart'; // Add this import
+import 'registration_screen.dart';
 
 class AdminLayout extends StatefulWidget {
   const AdminLayout({super.key});

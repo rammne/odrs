@@ -20,10 +20,8 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
     Query query = _firestore.collection('document_requests');
 
     if (_searchQuery.isNotEmpty) {
-      // When searching by requestId, don't order by lastUpdated
       return query.where('requestId', isEqualTo: _searchQuery).snapshots();
     } else {
-      // Only apply ordering and date filtering when not searching
       query = query.orderBy('lastUpdated', descending: true);
 
       if (_selectedDate != null) {
@@ -115,8 +113,7 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
         await _firestore.collection('document_requests').doc(docId).update({
           'status': newStatus,
           'processingLocation': location,
-          'lastUpdated':
-              FieldValue.serverTimestamp(), // Add timestamp when updated
+          'lastUpdated': FieldValue.serverTimestamp(),
         });
       }
     } else if (newStatus == 'Cancelled') {
@@ -166,12 +163,10 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
       );
 
       if (reason != null && reason.isNotEmpty) {
-        // Get the document data before deleting
         DocumentSnapshot doc =
             await _firestore.collection('document_requests').doc(docId).get();
         Map<String, dynamic> requestData = doc.data() as Map<String, dynamic>;
 
-        // Add to deleted_requests collection
         await _firestore.collection('deleted_requests').add({
           ...requestData,
           'status': newStatus,
@@ -180,7 +175,6 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
           'originalDocId': docId,
         });
 
-        // Delete from document_requests collection
         await _firestore.collection('document_requests').doc(docId).delete();
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -189,12 +183,10 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
         );
       }
     } else if (newStatus == 'Completed') {
-      // Get the document data before deleting
       DocumentSnapshot doc =
           await _firestore.collection('document_requests').doc(docId).get();
       Map<String, dynamic> requestData = doc.data() as Map<String, dynamic>;
 
-      // Add to completed_requests collection
       await _firestore.collection('completed_requests').add({
         ...requestData,
         'status': newStatus,
@@ -202,7 +194,6 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
         'originalDocId': docId,
       });
 
-      // Delete from document_requests collection
       await _firestore.collection('document_requests').doc(docId).delete();
 
       ScaffoldMessenger.of(context).showSnackBar(

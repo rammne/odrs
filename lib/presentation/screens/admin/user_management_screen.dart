@@ -21,9 +21,12 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   }
 
   Stream<QuerySnapshot> getUsers(String role) {
+    // Query users collection based on role
     var query = FirebaseFirestore.instance
         .collection('users')
         .where("role", isEqualTo: role);
+
+    // Filter by student number if search query exists
     if (_searchQuery.isNotEmpty) {
       query = query.where("student_number", isEqualTo: _searchQuery);
     }

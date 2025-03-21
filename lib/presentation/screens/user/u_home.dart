@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:odrs/presentation/screens/user/edit_screen.dart';
+import 'package:odrs/presentation/screens/user/profile_page.dart';
 import 'package:odrs/presentation/screens/user/request_history_screen.dart';
 
 class UserProfile {
@@ -145,197 +146,108 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Colors.blue[400]!, Colors.blue[800]!],
-          ),
-        ),
-        child: RefreshIndicator(
-          onRefresh: () async => _refreshProfile(),
-          child: FutureBuilder<UserProfile>(
-            future: _profileFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const _LoadingIndicator();
-              }
-              if (snapshot.hasError) {
-                return _ErrorSection(
-                  error: snapshot.error.toString(),
-                  onRetry: _refreshProfile,
-                );
-              }
+      backgroundColor: Color.fromARGB(255, 17, 127, 211),
+      drawer: FutureBuilder<UserProfile>(
+        future: _profileFuture,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) return const SizedBox();
+          return _buildNavigationDrawer(context, snapshot.data!);
+        },
+      ),
+      appBar: AppBar(
+        title: const Text('Home'),
+        backgroundColor: const Color(0xFF1B9CFF),
+        foregroundColor: Colors.white,
+      ),
+      body: RefreshIndicator(
+        onRefresh: () async => _refreshProfile(),
+        child: FutureBuilder<UserProfile>(
+          future: _profileFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const _LoadingIndicator();
+            }
+            if (snapshot.hasError) {
+              return _ErrorSection(
+                error: snapshot.error.toString(),
+                onRetry: _refreshProfile,
+              );
+            }
 
-              final profile = snapshot.data!;
-              return profile.role == 'alumni'
-                  ? _AlumniProfileScreen(
-                      profile: profile,
-                      onEditPressed: () => _navigateToEditScreen(profile),
-                    )
-                  : _buildStudentProfile(profile);
+            final profile = snapshot.data!;
+            return _buildMainContent(profile);
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavigationDrawer(BuildContext context, UserProfile profile) {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          InkWell(
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProfilePage(profile: profile),
+                ),
+              );
             },
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStudentProfile(UserProfile profile) {
-    return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
+            child: UserAccountsDrawerHeader(
+              decoration: const BoxDecoration(
+                color: Color(0xFF1B9CFF),
               ),
-              child: Column(
-                children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Colors.blue[800]!.withOpacity(0.1),
-                    child: Text(
-                      profile.name[0].toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue[800],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    profile.name,
+              accountName: Text(
+                profile.name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+              accountEmail: Text(profile.email),
+              currentAccountPicture: Hero(
+                tag: 'profile_avatar',
+                child: CircleAvatar(
+                  backgroundColor: Colors.white,
+                  child: Text(
+                    profile.name[0].toUpperCase(),
                     style: const TextStyle(
-                      fontSize: 24,
+                      fontSize: 32,
+                      color: Color(0xFF1B9CFF),
                       fontWeight: FontWeight.bold,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  Text(
-                    profile.email,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Student Information',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue[800],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _InfoTile(
-                    icon: Icons.badge,
-                    label: 'Student Number',
-                    value: profile.studentNumber,
-                    color: Colors.blue[800]!,
-                  ),
-                  const Divider(height: 24),
-                  _InfoTile(
-                    icon: Icons.school,
-                    label: 'Strand', // Changed from Course
-                    value: profile.strand, // Changed from course
-                    color: Colors.blue[800]!,
-                  ),
-                  const Divider(height: 24),
-                  _InfoTile(
-                    icon: Icons.phone,
-                    label: 'Contact',
-                    value: profile.contact,
-                    color: Colors.blue[800]!,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            _buildActionButtons(profile),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionButtons(UserProfile profile) {
-    return Column(
-      children: [
-        SizedBox(
-          width: double.infinity,
-          height: 50,
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue[800],
-              foregroundColor: Colors.white,
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            onPressed: _navigateToDocumentRequestScreen,
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.description),
-                SizedBox(width: 12),
-                Text(
-                  'Request Documents',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          width: double.infinity,
-          height: 50,
-          child: OutlinedButton(
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: Colors.blue[800]!),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
               ),
             ),
-            onPressed: () {
+          ),
+          // ListTile(
+          //   leading: const Icon(Icons.home),
+          //   title: const Text('Home'),
+          //   onTap: () {
+          //     Navigator.pop(context);
+          //     if (ModalRoute.of(context)?.settings.name != '/') {
+          //       Navigator.pushReplacementNamed(context, '/');
+          //     }
+          //   },
+          // ),
+          ListTile(
+            leading: const Icon(Icons.description),
+            title: const Text('Request Documents'),
+            onTap: () {
+              Navigator.pop(context);
+              _navigateToDocumentRequestScreen();
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.history),
+            title: const Text('Request History'),
+            onTap: () {
+              Navigator.pop(context);
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -343,72 +255,195 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 ),
               );
             },
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+          ),
+          ListTile(
+            leading: const Icon(Icons.edit),
+            title: const Text('Edit Profile'),
+            onTap: () {
+              Navigator.pop(context);
+              _navigateToEditScreen(profile);
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text('Logout', style: TextStyle(color: Colors.red)),
+            onTap: () {
+              Navigator.pop(context);
+              _showLogoutDialog(context);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMainContent(UserProfile profile) {
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      child: Column(
+        children: [
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: Column(
               children: [
-                Icon(Icons.history, color: Colors.blue[800]),
-                const SizedBox(width: 12),
-                Text(
-                  'Request History',
-                  style: TextStyle(
-                    color: Colors.blue[800],
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                // Welcome Card
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 30,
+                            backgroundColor:
+                                const Color(0xFF1B9CFF).withOpacity(0.1),
+                            child: Text(
+                              profile.name[0].toUpperCase(),
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1B9CFF),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Welcome, ${profile.name}!',
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  profile.studentNumber,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Online Document Request System',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1B9CFF),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Welcome to our Online Document Request System! This platform allows you to:',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildFeatureItem(
+                        icon: Icons.description_outlined,
+                        text: 'Request academic documents easily',
+                      ),
+                      _buildFeatureItem(
+                        icon: Icons.history,
+                        text: 'Track your document requests',
+                      ),
+                      _buildFeatureItem(
+                        icon: Icons.access_time,
+                        text: 'Save time with online processing',
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: _navigateToDocumentRequestScreen,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF1B9CFF),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 2,
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.description),
+                              SizedBox(width: 12),
+                              Text(
+                                'Request Documents',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          width: double.infinity,
-          height: 50,
-          child: OutlinedButton(
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: Colors.blue[800]!),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeatureItem({required IconData icon, required String text}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1B9CFF).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
             ),
-            onPressed: () => _navigateToEditScreen(profile),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.edit, color: Colors.blue[800]),
-                const SizedBox(width: 12),
-                Text(
-                  'Edit Profile',
-                  style: TextStyle(
-                    color: Colors.blue[800],
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+            child: Icon(
+              icon,
+              color: const Color(0xFF1B9CFF),
+              size: 20,
             ),
           ),
-        ),
-        const SizedBox(height: 16),
-        TextButton(
-          onPressed: () => _showLogoutDialog(context),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.logout, color: Colors.red),
-              SizedBox(width: 8),
-              Text(
-                'Logout',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.black87,
               ),
-            ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -565,21 +600,21 @@ class _ProfileContent extends StatelessWidget {
                     icon: Icons.badge,
                     label: 'Student Number',
                     value: profile.studentNumber,
-                    color: Colors.blue,
+                    color: const Color(0xFF1B9CFF),
                   ),
                   const Divider(),
                   _InfoTile(
                     icon: Icons.school,
                     label: 'Strand', // Changed from Course
                     value: profile.strand, // Changed from course
-                    color: Colors.orange,
+                    color: const Color(0xFF1B9CFF),
                   ),
                   const Divider(),
                   _InfoTile(
                     icon: Icons.phone,
                     label: 'Contact',
                     value: profile.contact,
-                    color: Colors.green,
+                    color: const Color(0xFF1B9CFF),
                   ),
                 ],
               ),
@@ -935,21 +970,21 @@ class _AlumniProfileScreen extends StatelessWidget {
               icon: Icons.email,
               label: 'Email',
               value: profile.email,
-              color: Colors.blue,
+              color: const Color(0xFF1B9CFF),
             ),
             const Divider(),
             _InfoTile(
               icon: Icons.phone,
               label: 'Contact',
               value: profile.contact,
-              color: Colors.green,
+              color: const Color(0xFF1B9CFF),
             ),
             const Divider(),
             _InfoTile(
               icon: Icons.school,
               label: 'Year Graduated',
               value: profile.yearGraduated!,
-              color: Colors.orange,
+              color: const Color(0xFF1B9CFF),
             ),
           ],
         ),
@@ -1026,3 +1061,55 @@ class _AlumniProfileScreen extends StatelessWidget {
     );
   }
 }
+
+// class _QuickActionCard extends StatelessWidget {
+//   final IconData icon;
+//   final String title;
+//   final VoidCallback onTap;
+
+//   const _QuickActionCard({
+//     required this.icon,
+//     required this.title,
+//     required this.onTap,
+//   });
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return InkWell(
+//       onTap: onTap,
+//       child: Container(
+//         padding: const EdgeInsets.all(16),
+//         decoration: BoxDecoration(
+//           color: Colors.white,
+//           borderRadius: BorderRadius.circular(16),
+//           boxShadow: [
+//             BoxShadow(
+//               color: Colors.black.withOpacity(0.1),
+//               blurRadius: 10,
+//               offset: const Offset(0, 4),
+//             ),
+//           ],
+//         ),
+//         child: Column(
+//           mainAxisSize: MainAxisSize.min,
+//           children: [
+//             Icon(
+//               icon,
+//               size: 32,
+//               color: const Color(0xFF1B9CFF),
+//             ),
+//             const SizedBox(height: 12),
+//             Text(
+//               title,
+//               textAlign: TextAlign.center,
+//               style: const TextStyle(
+//                 fontSize: 14,
+//                 fontWeight: FontWeight.bold,
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
