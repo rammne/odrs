@@ -218,6 +218,9 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Color(0xFF1B9CFF),
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(

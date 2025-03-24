@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:odrs/presentation/screens/user/document_request.dart';
 import 'package:odrs/presentation/screens/user/edit_screen.dart';
 import 'package:odrs/presentation/screens/user/profile_page.dart';
 import 'package:odrs/presentation/screens/user/report_screen.dart';
@@ -302,123 +303,130 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             child: Column(
               children: [
                 // Welcome Card
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 30,
-                            backgroundColor:
-                                const Color(0xFF1B9CFF).withOpacity(0.1),
-                            child: Text(
-                              profile.name[0].toUpperCase(),
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF1B9CFF),
+                Center(
+                  child: Container(
+                    width: MediaQuery.of(context).size.width * .75,
+                    height: MediaQuery.of(context).size.height * .9,
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 30,
+                              backgroundColor:
+                                  const Color(0xFF1B9CFF).withOpacity(0.1),
+                              child: Text(
+                                profile.name[0].toUpperCase(),
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF1B9CFF),
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Welcome, ${profile.name}!',
-                                  style: const TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Welcome, ${profile.name}!',
+                                    style: const TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 4),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    profile.studentNumber,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        const Text(
+                          'Online Document Request System',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1B9CFF),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Welcome to our Online Document Request System! This platform allows you to:',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildFeatureItem(
+                          icon: Icons.description_outlined,
+                          text: 'Request academic documents easily',
+                        ),
+                        _buildFeatureItem(
+                          icon: Icons.history,
+                          text: 'Track your document requests',
+                        ),
+                        _buildFeatureItem(
+                          icon: Icons.access_time,
+                          text: 'Save time with online processing',
+                        ),
+                        SizedBox(
+                          height: 24,
+                        ),
+                        // Request Document Button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: _navigateToDocumentRequestScreen,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1B9CFF),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 2,
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.description),
+                                SizedBox(width: 12),
                                 Text(
-                                  profile.studentNumber,
+                                  'Request Documents',
                                   style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.grey[600],
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      const Text(
-                        'Online Document Request System',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1B9CFF),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Welcome to our Online Document Request System! This platform allows you to:',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildFeatureItem(
-                        icon: Icons.description_outlined,
-                        text: 'Request academic documents easily',
-                      ),
-                      _buildFeatureItem(
-                        icon: Icons.history,
-                        text: 'Track your document requests',
-                      ),
-                      _buildFeatureItem(
-                        icon: Icons.access_time,
-                        text: 'Save time with online processing',
-                      ),
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          onPressed: _navigateToDocumentRequestScreen,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF1B9CFF),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 2,
-                          ),
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.description),
-                              SizedBox(width: 12),
-                              Text(
-                                'Request Documents',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -481,7 +489,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   }
 
   void _navigateToDocumentRequestScreen() {
-    Navigator.pushNamed(context, '/documentRequest');
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DocumentRequestScreen(),
+        ));
   }
 }
 

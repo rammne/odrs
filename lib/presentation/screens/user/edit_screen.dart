@@ -100,7 +100,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         title: Text(widget.profile.role == 'alumni'
             ? 'Edit Alumni Profile'
             : 'Edit Profile'),
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: Color(0xFF1B9CFF),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -223,6 +223,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
         const SizedBox(height: 16),
         TextFormField(
+          readOnly: true,
           initialValue: _studentNumber,
           decoration: const InputDecoration(
             labelText: 'Student Number',
@@ -234,6 +235,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
         const SizedBox(height: 16),
         TextFormField(
+          readOnly: true,
           initialValue: _course,
           decoration: const InputDecoration(
             labelText: 'Course',

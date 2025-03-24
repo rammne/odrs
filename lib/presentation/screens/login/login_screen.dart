@@ -410,11 +410,12 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Colors.blue[400]!, Colors.blue[800]!],
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('images/olopsc2.png'),
+            fit: BoxFit.cover,
+            opacity: .8,
+            filterQuality: FilterQuality.high,
           ),
         ),
         child: Center(
@@ -424,7 +425,7 @@ class _LoginScreenState extends State<LoginScreen> {
               padding: const EdgeInsets.all(32),
               width: 450,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: const Color.fromARGB(190, 255, 255, 255),
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
