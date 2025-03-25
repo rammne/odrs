@@ -28,6 +28,8 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
   String _purposeText = "";
   final TextEditingController _otherController = TextEditingController();
   final TextEditingController _purposeController = TextEditingController();
+  String _referenceNumber = ""; // Add this new field
+  final TextEditingController _referenceController = TextEditingController(); // Add this controller
 
   // Certificate types for dropdown
   final List<String> _certificateTypes = [
@@ -43,18 +45,18 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
   final List<String> _documentCategories = [
     "SF10 (F137) For Evaluation",
     "SF10 (F137) Official",
-    "Certificate", // This will use the dropdown
+    "Certificate",
     "ESC Certification",
     "Diploma",
     "Assessment of School Fees",
-    "Other" // For custom document requests
+    "Other" 
   ];
 
-  String _copyType = "Hard Copy"; // Add this new field
+  String _copyType = "Hard Copy"; 
   final List<String> _copyTypes = [
     "Hard Copy",
     "Soft Copy"
-  ]; // Add copy type options
+  ]; 
 
   @override
   void initState() {
@@ -66,6 +68,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
   void dispose() {
     _otherController.dispose();
     _purposeController.dispose();
+    _referenceController.dispose(); 
     super.dispose();
   }
 
@@ -148,6 +151,13 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
       return;
     }
 
+    if (_referenceNumber.trim().isEmpty) { 
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter a reference number")),
+      );
+      return;
+    }
+
     String finalDocumentName = _selectedDocument == "Certificate"
         ? _selectedCertificateType!
         : (_selectedDocument == "Other"
@@ -179,7 +189,8 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
         'cancellationReason': null,
         'role': role,
         'lastUpdated': FieldValue.serverTimestamp(),
-        'copyType': _copyType, // Add this new field
+        'copyType': _copyType,
+        'referenceNumber': _referenceNumber, 
       });
 
       // Generate and show receipt
@@ -191,7 +202,8 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
         documents: {finalDocumentName: _quantity},
         requestDate: DateTime.now(),
         purpose: _purposeText,
-        copyType: _copyType, // Add this parameter
+        copyType: _copyType,
+        referenceNumber: _referenceNumber, 
       );
 
       setState(() {
@@ -306,6 +318,34 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                               ),
                             ),
                             onChanged: (value) => _purposeText = value,
+                          ),
+                        ),
+                        const SizedBox(height: 24), 
+                        _buildCard(
+                          title: 'Reference Number', 
+                          child: TextFormField(
+                            controller: _referenceController,
+                            decoration: InputDecoration(
+                              hintText: "Enter your reference number",
+                              fillColor: Colors.grey[50],
+                              filled: true,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide:
+                                    BorderSide(color: Colors.grey[300]!),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide:
+                                    BorderSide(color: Colors.grey[300]!),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                    color: Colors.blue[800]!, width: 2),
+                              ),
+                            ),
+                            onChanged: (value) => _referenceNumber = value,
                           ),
                         ),
                         const SizedBox(height: 32),

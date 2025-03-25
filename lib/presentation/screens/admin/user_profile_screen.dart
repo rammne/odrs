@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:rxdart/rxdart.dart';
+import '../../../utils/pdf_generator.dart';
 
 class AUserProfileScreen extends StatelessWidget {
   final String userId;
@@ -264,6 +265,26 @@ class AUserProfileScreen extends StatelessWidget {
     }
   }
 
+  void _downloadReceipt(BuildContext context, Map<String, dynamic> data) async {
+    try {
+      await RequestReceiptGenerator.generateReceipt(
+        requestId: data['requestId'],
+        name: data['name'],
+        studentNumber: data['studentNumber'],
+        contact: data['contact'],
+        documents: {data['documentName']: data['quantity']},
+        requestDate: (data['dateRequested'] as Timestamp).toDate(),
+        purpose: data['purpose'],
+        copyType: data['copyType'],
+        referenceNumber: data['referenceNumber'],
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to download receipt")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -511,6 +532,11 @@ class AUserProfileScreen extends StatelessWidget {
                           ],
                         ),
                       ],
+                    ),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.download),
+                      onPressed: () => _downloadReceipt(context, requestData),
+                      tooltip: 'Download Receipt',
                     ),
                   ),
                   Padding(

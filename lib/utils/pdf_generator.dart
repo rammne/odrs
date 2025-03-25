@@ -10,8 +10,9 @@ class RequestReceiptGenerator {
     required String contact,
     required Map<String, int> documents,
     required DateTime requestDate,
-    required String purpose, // Add this parameter
-    required String copyType, // Add this parameter
+    required String purpose,
+    required String copyType,
+    required String referenceNumber, 
   }) async {
     final pdf = pw.Document();
 
@@ -42,9 +43,11 @@ class RequestReceiptGenerator {
                   .map((doc) => pw.Text('- ${doc.key} (${doc.value} copies)')),
               pw.SizedBox(height: 20),
               pw.Text('Purpose:'),
-              pw.Text(purpose), // Add purpose to the receipt
+              pw.Text(purpose), 
               pw.SizedBox(height: 20),
-              pw.Text('Copy Type: $copyType'), // Add copy type to the receipt
+              pw.Text('Copy Type: $copyType'), 
+              pw.SizedBox(height: 20),
+              pw.Text('Reference Number: $referenceNumber'), 
               pw.SizedBox(height: 40),
               pw.Text(
                   'Please present a copy (soft copy or hard copy) of this receipt when claiming your documents.'),
@@ -70,7 +73,8 @@ class RequestReceiptGenerator {
     required Map<String, dynamic> documents,
     required DateTime requestDate,
     required String purpose,
-    required String copyType, // Add this parameter
+    required String copyType,
+    required String referenceNumber,
   }) async {
     final pdf = pw.Document();
 
@@ -103,7 +107,9 @@ class RequestReceiptGenerator {
               pw.Text('Purpose:'),
               pw.Text(purpose),
               pw.SizedBox(height: 20),
-              pw.Text('Copy Type: $copyType'), // Add copy type to the receipt
+              pw.Text('Copy Type: $copyType'), 
+              pw.SizedBox(height: 20),
+              pw.Text('Reference Number: $referenceNumber'), 
               pw.SizedBox(height: 40),
               pw.Text(
                   'Please present a copy (soft copy or hard copy) of this receipt when claiming your documents.'),
@@ -120,43 +126,3 @@ class RequestReceiptGenerator {
     );
   }
 }
-
-// class PDFGenerator {
-//   static Future<void> generateDocument(
-//     String documentType,
-//     Map<String, dynamic> userData,
-//   ) async {
-//     final pdf = pw.Document();
-
-//     pdf.addPage(
-//       pw.Page(
-//         pageFormat: PdfPageFormat.a4,
-//         build: (pw.Context context) {
-//           return pw.Column(
-//             crossAxisAlignment: pw.CrossAxisAlignment.start,
-//             children: [
-//               pw.Header(
-//                 level: 0,
-//                 child: pw.Text('Official Document',
-//                     style: pw.TextStyle(fontSize: 24)),
-//               ),
-//               pw.SizedBox(height: 20),
-//               pw.Text('Document Type: $documentType'),
-//               pw.SizedBox(height: 10),
-//               pw.Text('Student Name: ${userData['name']}'),
-//               pw.Text('Student Number: ${userData['studentNumber']}'),
-//               pw.SizedBox(height: 20),
-//               pw.Text('Date Generated: ${DateTime.now().toString()}'),
-//             ],
-//           );
-//         },
-//       ),
-//     );
-
-//     // Show PDF preview dialog with download option
-//     await Printing.layoutPdf(
-//       onLayout: (PdfPageFormat format) async => pdf.save(),
-//       name: '${documentType}_${userData['studentNumber']}.pdf',
-//     );
-//   }
-// }

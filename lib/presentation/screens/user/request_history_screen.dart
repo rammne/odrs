@@ -156,6 +156,7 @@ class RequestHistoryScreen extends StatelessWidget {
                                   onPressed: () {
                                     RequestReceiptGenerator.showReceipt(
                                       requestId: requestData['requestId'],
+                                      referenceNumber: requestData['referenceNumber'] ?? 'N/A',
                                       name: requestData['name'] ?? 'Unknown',
                                       studentNumber:
                                           requestData['studentNumber'] ?? 'N/A',

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:odrs/presentation/screens/admin/deleted_requests_screen.dart';
 import 'package:odrs/presentation/screens/admin/completed_requests_screen.dart';
+import '../../../utils/pdf_generator.dart';
 
 class DocumentRequestsScreen extends StatefulWidget {
   const DocumentRequestsScreen({super.key});
@@ -259,6 +260,26 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
     }
   }
 
+  void _downloadReceipt(Map<String, dynamic> data) async {
+    try {
+      await RequestReceiptGenerator.generateReceipt(
+        requestId: data['requestId'],
+        name: data['name'],
+        studentNumber: data['studentNumber'],
+        contact: data['contact'],
+        documents: {data['documentName']: data['quantity']},
+        requestDate: (data['dateRequested'] as Timestamp).toDate(),
+        purpose: data['purpose'],
+        copyType: data['copyType'],
+        referenceNumber: data['referenceNumber'],
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to download receipt")),
+      );
+    }
+  }
+
   Future<void> _selectDate(BuildContext context) async {
     DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -385,6 +406,16 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
                               _infoRow("Processing Location",
                                   data['processingLocation']),
                             const SizedBox(height: 10),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.download),
+                                  onPressed: () => _downloadReceipt(data),
+                                  tooltip: 'Download Receipt',
+                                ),
+                              ],
+                            ),
                             _statusButtons(doc.id, data['status'] ?? ""),
                           ],
                         ),
