@@ -41,6 +41,15 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
   ];
   String? _selectedCertificateType;
 
+  // Document prices
+  final Map<String, double> _documentPrices = {
+    "SF10 (F137) For Evaluation": 115.0,
+    "SF10 (F137) Official": 115.0,
+    "Certificate": 65.0,
+    "ESC Certification": 65.0,
+    "Diploma": 150.0,
+  };
+
   // Main document categories
   final List<String> _documentCategories = [
     "SF10 (F137) For Evaluation",
@@ -225,6 +234,19 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
         const SnackBar(content: Text("Failed to submit request")),
       );
     }
+  }
+
+  double _calculateTotalPrice() {
+    if (_selectedDocument == null) return 0;
+    
+    double basePrice = 0;
+    if (_selectedDocument == "Certificate") {
+      basePrice = _documentPrices["Certificate"] ?? 0;
+    } else {
+      basePrice = _documentPrices[_selectedDocument!] ?? 0;
+    }
+    
+    return basePrice * _quantity;
   }
 
   @override
@@ -423,7 +445,20 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: RadioListTile<String>(
-        title: Text(docName),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(docName),
+            if (_documentPrices.containsKey(docName))
+              Text(
+                '₱${_documentPrices[docName]?.toStringAsFixed(2)}',
+                style: TextStyle(
+                  color: Colors.blue[800],
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+          ],
+        ),
         value: docName,
         groupValue: _selectedDocument,
         onChanged: (value) => setState(() {
@@ -543,12 +578,25 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 24),
-        Text(
-          "Number of copies:",
-          style: TextStyle(
-            fontSize: 16,
-            color: Colors.grey[600],
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "Number of copies:",
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+              ),
+            ),
+            Text(
+              "Total: ₱${_calculateTotalPrice().toStringAsFixed(2)}",
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.blue[800],
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 8),
         Container(
