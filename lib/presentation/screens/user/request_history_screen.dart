@@ -167,6 +167,8 @@ class RequestHistoryScreen extends StatelessWidget {
                                       purpose: requestData['purpose'] ??
                                           'Not specified',
                                       copyType: 'original',
+                                      paymentProvider: requestData['paymentProvider'] ?? 'Unknown',
+                                      price: requestData['price'] ?? 0.0,
                                     );
                                   },
                                 ),

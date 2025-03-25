@@ -67,6 +67,14 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
     "Soft Copy"
   ]; 
 
+  // Add payment provider options
+  String _paymentProvider = "GCash";
+  final List<String> _paymentProviders = [
+    "GCash",
+    "BDO",
+    "BPI"
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -200,6 +208,8 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
         'lastUpdated': FieldValue.serverTimestamp(),
         'copyType': _copyType,
         'referenceNumber': _referenceNumber, 
+        'paymentProvider': _paymentProvider,
+        'price': _calculateTotalPrice(), // Add this line to store the price
       });
 
       // Generate and show receipt
@@ -212,7 +222,9 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
         requestDate: DateTime.now(),
         purpose: _purposeText,
         copyType: _copyType,
-        referenceNumber: _referenceNumber, 
+        referenceNumber: _referenceNumber,
+        paymentProvider: _paymentProvider, // Add this line
+        price: _calculateTotalPrice(), // Add this line
       );
 
       setState(() {
@@ -368,6 +380,44 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                               ),
                             ),
                             onChanged: (value) => _referenceNumber = value,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        _buildCard(
+                          title: 'Payment Provider',
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Select payment provider:",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey[300]!),
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: Colors.grey[50],
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: _paymentProvider,
+                                    isExpanded: true,
+                                    items: _paymentProviders.map((provider) {
+                                      return DropdownMenuItem<String>(
+                                        value: provider,
+                                        child: Text(provider),
+                                      );
+                                    }).toList(),
+                                    onChanged: (value) => setState(() => _paymentProvider = value!),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         const SizedBox(height: 32),
