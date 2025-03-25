@@ -277,8 +277,8 @@ class AUserProfileScreen extends StatelessWidget {
         purpose: data['purpose'],
         copyType: data['copyType'],
         referenceNumber: data['referenceNumber'],
-        paymentProvider: data['paymentProvider'],
-        price: data['price'],
+        paymentProvider: data['paymentProvider'] ?? 'N/A',
+        price: (data['price'] ?? 0.0).toDouble(),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

@@ -12,7 +12,9 @@ class RequestReceiptGenerator {
     required DateTime requestDate,
     required String purpose,
     required String copyType,
-    required String referenceNumber, 
+    required String referenceNumber,
+    required String paymentProvider, // Add this parameter
+    required double price, // Add this parameter
   }) async {
     final pdf = pw.Document();
 
@@ -47,7 +49,11 @@ class RequestReceiptGenerator {
               pw.SizedBox(height: 20),
               pw.Text('Copy Type: $copyType'), 
               pw.SizedBox(height: 20),
-              pw.Text('Reference Number: $referenceNumber'), 
+              pw.Text('Reference Number: $referenceNumber'),
+              pw.SizedBox(height: 20),
+              pw.Text('Payment Details:'),
+              pw.Text('Provider: $paymentProvider'),
+              pw.Text('Total Amount: PHP ${price.toStringAsFixed(2)}'),
               pw.SizedBox(height: 40),
               pw.Text(
                   'Please present a copy (soft copy or hard copy) of this receipt when claiming your documents.'),
@@ -75,6 +81,8 @@ class RequestReceiptGenerator {
     required String purpose,
     required String copyType,
     required String referenceNumber,
+    required String paymentProvider,
+    required double price,
   }) async {
     final pdf = pw.Document();
 
@@ -109,7 +117,11 @@ class RequestReceiptGenerator {
               pw.SizedBox(height: 20),
               pw.Text('Copy Type: $copyType'), 
               pw.SizedBox(height: 20),
-              pw.Text('Reference Number: $referenceNumber'), 
+              pw.Text('Reference Number: $referenceNumber'),
+              pw.SizedBox(height: 20),
+              pw.Text('Payment Details:'),
+              pw.Text('Provider: $paymentProvider'),
+              pw.Text('Total Amount: PHP ${price.toStringAsFixed(2)}'),
               pw.SizedBox(height: 40),
               pw.Text(
                   'Please present a copy (soft copy or hard copy) of this receipt when claiming your documents.'),

@@ -156,19 +156,16 @@ class RequestHistoryScreen extends StatelessWidget {
                                   onPressed: () {
                                     RequestReceiptGenerator.showReceipt(
                                       requestId: requestData['requestId'],
-                                      referenceNumber: requestData['referenceNumber'] ?? 'N/A',
                                       name: requestData['name'] ?? 'Unknown',
-                                      studentNumber:
-                                          requestData['studentNumber'] ?? 'N/A',
+                                      studentNumber: requestData['studentNumber'] ?? 'N/A',
                                       contact: requestData['contact'] ?? 'N/A',
-                                      documents: requestData['documents'] ?? {},
-                                      requestDate:
-                                          requestData['dateRequested'].toDate(),
-                                      purpose: requestData['purpose'] ??
-                                          'Not specified',
-                                      copyType: 'original',
-                                      paymentProvider: requestData['paymentProvider'] ?? 'Unknown',
-                                      price: requestData['price'] ?? 0.0,
+                                      documents: {requestData['documentName']: requestData['quantity']},
+                                      requestDate: requestData['dateRequested'].toDate(),
+                                      purpose: requestData['purpose'] ?? 'Not specified',
+                                      copyType: requestData['copyType'] ?? 'Original',
+                                      referenceNumber: requestData['referenceNumber'] ?? 'N/A',
+                                      paymentProvider: requestData['paymentProvider'] ?? 'N/A',
+                                      price: (requestData['price'] ?? 0.0).toDouble(),
                                     );
                                   },
                                 ),
