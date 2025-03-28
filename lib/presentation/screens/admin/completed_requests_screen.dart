@@ -23,7 +23,7 @@ class _CompletedRequestsScreenState extends State<CompletedRequestsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Completed Requests'),
-        backgroundColor: Colors.blueGrey[800],
+        backgroundColor: Color(0xFF1B9CFF),
       ),
       body: Column(
         children: [

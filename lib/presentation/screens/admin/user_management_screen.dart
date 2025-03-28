@@ -40,7 +40,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: _isSearching ? _buildSearchField() : _buildAppBarTitle(),
-        backgroundColor: Colors.blueGrey[800],
+        backgroundColor: Color(0xFF1B9CFF),
         actions: [
           IconButton(
             icon: Icon(_isSearching ? Icons.close : Icons.search,

@@ -22,7 +22,7 @@ class _DeletedRequestsScreenState extends State<DeletedRequestsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Deleted Requests'),
-        backgroundColor: Colors.blueGrey[800],
+        backgroundColor: Color(0xFF1B9CFF),
       ),
       body: Column(
         children: [

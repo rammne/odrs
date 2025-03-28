@@ -304,7 +304,7 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
           "Admin - Document Requests",
           style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: Colors.blueGrey[800],
+        backgroundColor: Color(0xFF1B9CFF),
         actions: [
           IconButton(
             icon: const Icon(Icons.check_circle_outline, color: Colors.white),

@@ -58,7 +58,7 @@ class _AdminLayoutState extends State<AdminLayout> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[300],
+      backgroundColor: Color(0xFF1B9CFF),
       body: Row(
         children: [
           NavigationRail(

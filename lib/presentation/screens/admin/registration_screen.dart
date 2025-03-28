@@ -184,18 +184,18 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
-          prefixIcon: Icon(icon, color: Colors.blueGrey[700]),
+          prefixIcon: Icon(icon, color: Color(0xFF1B9CFF)),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.blueGrey.shade200),
+            borderSide: BorderSide(color: Color(0xFF1B9CFF)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.blueGrey.shade200),
+            borderSide: BorderSide(color: Color(0xFF1B9CFF)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.blueGrey.shade700, width: 2),
+            borderSide: BorderSide(color: Color(0xFF1B9CFF), width: 2),
           ),
           filled: true,
           fillColor: Colors.grey[50],
@@ -215,18 +215,18 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
         value: _selectedStrand,
         decoration: InputDecoration(
           labelText: 'Strand',
-          prefixIcon: Icon(Icons.school, color: Colors.blueGrey[700]),
+          prefixIcon: Icon(Icons.school, color: Color(0xFF1B9CFF)),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.blueGrey.shade200),
+            borderSide: BorderSide(color: Color(0xFF1B9CFF)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.blueGrey.shade200),
+            borderSide: BorderSide(color: Color(0xFF1B9CFF)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.blueGrey.shade700, width: 2),
+            borderSide: BorderSide(color: Color(0xFF1B9CFF), width: 2),
           ),
           filled: true,
           fillColor: Colors.grey[50],
@@ -255,18 +255,18 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
         value: _selectedGradeLevel,
         decoration: InputDecoration(
           labelText: 'Grade Level',
-          prefixIcon: Icon(Icons.grade, color: Colors.blueGrey[700]),
+          prefixIcon: Icon(Icons.grade, color: Color(0xFF1B9CFF)),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.blueGrey.shade200),
+            borderSide: BorderSide(color: Color(0xFF1B9CFF)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.blueGrey.shade200),
+            borderSide: BorderSide(color: Color(0xFF1B9CFF)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.blueGrey.shade700, width: 2),
+            borderSide: BorderSide(color: Color(0xFF1B9CFF), width: 2),
           ),
           filled: true,
           fillColor: Colors.grey[50],
@@ -304,7 +304,7 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
             color: Colors.white,
           ),
         ),
-        backgroundColor: Colors.blueGrey[800],
+        backgroundColor: Color(0xFF1B9CFF),
         elevation: 0,
       ),
       body: SafeArea(
@@ -319,7 +319,7 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
                   Icon(
                     Icons.person_add_rounded,
                     size: 80,
-                    color: Colors.blueGrey[700],
+                    color: Color(0xFF1B9CFF),
                   ),
                   SizedBox(height: 24),
                   Text(
@@ -327,7 +327,7 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Colors.blueGrey[900],
+                      color: Color(0xFF1B9CFF),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -367,7 +367,7 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
                       onPressed: _isLoading ? null : _registerUser,
                       style: ElevatedButton.styleFrom(
                         foregroundColor: Colors.white,
-                        backgroundColor: Colors.blueGrey[700],
+                        backgroundColor: Color(0xFF1B9CFF),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),

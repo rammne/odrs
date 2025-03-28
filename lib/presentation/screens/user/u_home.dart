@@ -295,7 +295,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
   Widget _buildMainContent(UserProfile profile) {
     return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
       child: Column(
         children: [
           Container(
@@ -319,113 +318,123 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         ),
                       ],
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 30,
-                              backgroundColor:
-                                  const Color(0xFF1B9CFF).withOpacity(0.1),
-                              child: Text(
-                                profile.name[0].toUpperCase(),
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1B9CFF),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 30,
+                                backgroundColor:
+                                    const Color(0xFF1B9CFF).withOpacity(0.1),
+                                child: Text(
+                                  profile.name[0].toUpperCase(),
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF1B9CFF),
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Welcome, ${profile.name}!',
-                                    style: const TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Welcome, ${profile.name}!',
+                                      style: const TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 4),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      profile.studentNumber,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          const Text(
+                            'Online Document Request System',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1B9CFF),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Welcome to our Online Document Request System! This platform allows you to:',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildFeatureItem(
+                            icon: Icons.description_outlined,
+                            text: 'Request academic documents easily',
+                          ),
+                          _buildFeatureItem(
+                            icon: Icons.history,
+                            text: 'Track your document requests',
+                          ),
+                          _buildFeatureItem(
+                            icon: Icons.access_time,
+                            text: 'Save time with online processing',
+                          ),
+                          SizedBox(
+                            height: 24,
+                          ),
+                          Center(
+                            child: Image(
+                              image: AssetImage('images/olopsc1.png'),
+                            ),
+                          ),
+                          SizedBox(
+                            height: 24,
+                          ),
+                          // Request Document Button
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: ElevatedButton(
+                              onPressed: _navigateToDocumentRequestScreen,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF1B9CFF),
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 2,
+                              ),
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.description),
+                                  SizedBox(width: 12),
                                   Text(
-                                    profile.studentNumber,
+                                    'Request Documents',
                                     style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.grey[600],
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        const Text(
-                          'Online Document Request System',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1B9CFF),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'Welcome to our Online Document Request System! This platform allows you to:',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildFeatureItem(
-                          icon: Icons.description_outlined,
-                          text: 'Request academic documents easily',
-                        ),
-                        _buildFeatureItem(
-                          icon: Icons.history,
-                          text: 'Track your document requests',
-                        ),
-                        _buildFeatureItem(
-                          icon: Icons.access_time,
-                          text: 'Save time with online processing',
-                        ),
-                        SizedBox(
-                          height: 24,
-                        ),
-                        // Request Document Button
-                        SizedBox(
-                          width: double.infinity,
-                          height: 50,
-                          child: ElevatedButton(
-                            onPressed: _navigateToDocumentRequestScreen,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1B9CFF),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 2,
-                            ),
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.description),
-                                SizedBox(width: 12),
-                                Text(
-                                  'Request Documents',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),

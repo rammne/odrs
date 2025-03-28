@@ -439,19 +439,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Image.asset(
-                    "images/logo.jpg",
-                    height: 120,
+                    "images/odrs-logo-nb.png",
+                    height: 300,
                   ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'ODRS',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue[800],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
                   Text(
                     'Please sign in to continue',
                     style: TextStyle(
