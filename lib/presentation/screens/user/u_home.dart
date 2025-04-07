@@ -148,7 +148,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color.fromARGB(255, 17, 127, 211),
+      backgroundColor: Color(0xFFE5E7ED),
       drawer: FutureBuilder<UserProfile>(
         future: _profileFuture,
         builder: (context, snapshot) {
@@ -158,8 +158,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       ),
       appBar: AppBar(
         title: const Text('Home'),
-        backgroundColor: const Color(0xFF1B9CFF),
-        foregroundColor: Colors.white,
+        backgroundColor: Color(0xFF001184),
+        foregroundColor: Color.fromARGB(255, 255, 255, 255),
       ),
       body: RefreshIndicator(
         onRefresh: () async => _refreshProfile(),
@@ -201,7 +201,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             },
             child: UserAccountsDrawerHeader(
               decoration: const BoxDecoration(
-                color: Color(0xFF1B9CFF),
+                color: Color(0xFF001184),
               ),
               accountName: Text(
                 profile.name,
@@ -219,7 +219,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     profile.name[0].toUpperCase(),
                     style: const TextStyle(
                       fontSize: 32,
-                      color: Color(0xFF1B9CFF),
+                      color: Color(0xFF001184),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -304,8 +304,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 // Welcome Card
                 Center(
                   child: Container(
-                    width: MediaQuery.of(context).size.width * .75,
-                    height: MediaQuery.of(context).size.height * .9,
+                    width: MediaQuery.of(context).size.width * .8,
+                    height: MediaQuery.of(context).size.height * .78,
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -327,13 +327,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                               CircleAvatar(
                                 radius: 30,
                                 backgroundColor:
-                                    const Color(0xFF1B9CFF).withOpacity(0.1),
+                                    const Color(0xFF001184).withOpacity(0.1),
                                 child: Text(
                                   profile.name[0].toUpperCase(),
                                   style: const TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,
-                                    color: Color(0xFF1B9CFF),
+                                    color: Color(0xFF001184),
                                   ),
                                 ),
                               ),
@@ -368,7 +368,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF1B9CFF),
+                              color: Color(0xFF001184),
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -397,7 +397,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           ),
                           Center(
                             child: Image(
-                              image: AssetImage('images/olopsc1.png'),
+                              image: AssetImage('images/olopsccover.png'),
                             ),
                           ),
                           SizedBox(
@@ -410,7 +410,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             child: ElevatedButton(
                               onPressed: _navigateToDocumentRequestScreen,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF1B9CFF),
+                                backgroundColor: const Color(0xFF001184),
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
@@ -454,12 +454,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFF1B9CFF).withOpacity(0.1),
+              color: const Color(0xFF001184).withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               icon,
-              color: const Color(0xFF1B9CFF),
+              color: const Color(0xFF001184),
               size: 20,
             ),
           ),
@@ -635,21 +635,21 @@ class _ProfileContent extends StatelessWidget {
                     icon: Icons.badge,
                     label: 'Student Number',
                     value: profile.studentNumber,
-                    color: const Color(0xFF1B9CFF),
+                    color: const Color(0xFF001184),
                   ),
                   const Divider(),
                   _InfoTile(
                     icon: Icons.school,
                     label: 'Strand', // Changed from Course
                     value: profile.strand, // Changed from course
-                    color: const Color(0xFF1B9CFF),
+                    color: const Color(0xFF001184),
                   ),
                   const Divider(),
                   _InfoTile(
                     icon: Icons.phone,
                     label: 'Contact',
                     value: profile.contact,
-                    color: const Color(0xFF1B9CFF),
+                    color: const Color(0xFF001184),
                   ),
                 ],
               ),
@@ -1005,21 +1005,21 @@ class _AlumniProfileScreen extends StatelessWidget {
               icon: Icons.email,
               label: 'Email',
               value: profile.email,
-              color: const Color(0xFF1B9CFF),
+              color: const Color(0xFF001184),
             ),
             const Divider(),
             _InfoTile(
               icon: Icons.phone,
               label: 'Contact',
               value: profile.contact,
-              color: const Color(0xFF1B9CFF),
+              color: const Color(0xFF001184),
             ),
             const Divider(),
             _InfoTile(
               icon: Icons.school,
               label: 'Year Graduated',
               value: profile.yearGraduated!,
-              color: const Color(0xFF1B9CFF),
+              color: const Color(0xFF001184),
             ),
           ],
         ),
@@ -1131,7 +1131,7 @@ class _AlumniProfileScreen extends StatelessWidget {
 //             Icon(
 //               icon,
 //               size: 32,
-//               color: const Color(0xFF1B9CFF),
+//               color: const Color(0xFF001184),
 //             ),
 //             const SizedBox(height: 12),
 //             Text(

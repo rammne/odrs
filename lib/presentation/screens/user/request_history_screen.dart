@@ -39,9 +39,19 @@ class RequestHistoryScreen extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
-      backgroundColor: Colors.lightBlue[50],
+      backgroundColor: Color(0xFFCACACA),
       appBar: AppBar(
-        title: const Text('Request History'),
+        leading: IconButton(
+            color: Colors.white,
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            icon: Icon(Icons.arrow_back)),
+        backgroundColor: Color(0xFF001184),
+        title: const Text(
+          'Request History',
+          style: TextStyle(color: Color.fromARGB(255, 255, 247, 247)),
+        ),
       ),
       body: user == null
           ? const Center(child: Text('Please log in to view your requests.'))
@@ -116,7 +126,10 @@ class RequestHistoryScreen extends StatelessWidget {
                                 Text(
                                     'Contact: ${requestData['contact'] ?? 'N/A'}'),
                                 Text('Documents Requested:\n$documentsList'),
-                                Text('Status: ${_getStatusText(requestData)}',
+                                Text(
+                                    'Date Requested: ${formatDate(requestData['dateRequested'])}'),
+                                Text(
+                                    '\n\nStatus: ${_getStatusText(requestData)}',
                                     style: TextStyle(
                                         color: getStatusColor(
                                             requestData['status'] ?? 'Pending'),
@@ -133,8 +146,6 @@ class RequestHistoryScreen extends StatelessWidget {
                                       ),
                                     ),
                                   ),
-                                Text(
-                                    'Date Requested: ${formatDate(requestData['dateRequested'])}'),
                               ],
                             ),
                             isThreeLine: true,
@@ -157,15 +168,27 @@ class RequestHistoryScreen extends StatelessWidget {
                                     RequestReceiptGenerator.showReceipt(
                                       requestId: requestData['requestId'],
                                       name: requestData['name'] ?? 'Unknown',
-                                      studentNumber: requestData['studentNumber'] ?? 'N/A',
+                                      studentNumber:
+                                          requestData['studentNumber'] ?? 'N/A',
                                       contact: requestData['contact'] ?? 'N/A',
-                                      documents: {requestData['documentName']: requestData['quantity']},
-                                      requestDate: requestData['dateRequested'].toDate(),
-                                      purpose: requestData['purpose'] ?? 'Not specified',
-                                      copyType: requestData['copyType'] ?? 'Original',
-                                      referenceNumber: requestData['referenceNumber'] ?? 'N/A',
-                                      paymentProvider: requestData['paymentProvider'] ?? 'N/A',
-                                      price: (requestData['price'] ?? 0.0).toDouble(),
+                                      documents: {
+                                        requestData['documentName']:
+                                            requestData['quantity']
+                                      },
+                                      requestDate:
+                                          requestData['dateRequested'].toDate(),
+                                      purpose: requestData['purpose'] ??
+                                          'Not specified',
+                                      copyType:
+                                          requestData['copyType'] ?? 'Original',
+                                      referenceNumber:
+                                          requestData['referenceNumber'] ??
+                                              'N/A',
+                                      paymentProvider:
+                                          requestData['paymentProvider'] ??
+                                              'N/A',
+                                      price: (requestData['price'] ?? 0.0)
+                                          .toDouble(),
                                     );
                                   },
                                 ),

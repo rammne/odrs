@@ -64,7 +64,7 @@ class _ReportScreenState extends State<ReportScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Report an Issue'),
-        backgroundColor: const Color(0xFF1B9CFF),
+        backgroundColor: const Color(0xFF001184),
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -131,7 +131,7 @@ class _ReportScreenState extends State<ReportScreen> {
                         child: ElevatedButton(
                           onPressed: _isSubmitting ? null : _submitReport,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF1B9CFF),
+                            backgroundColor: const Color(0xff001184),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -150,9 +150,10 @@ class _ReportScreenState extends State<ReportScreen> {
                               : const Text(
                                   'Submit Report',
                                   style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color:
+                                          Color.fromARGB(255, 255, 255, 255)),
                                 ),
                         ),
                       ),

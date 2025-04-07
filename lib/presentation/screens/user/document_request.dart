@@ -29,7 +29,8 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
   final TextEditingController _otherController = TextEditingController();
   final TextEditingController _purposeController = TextEditingController();
   String _referenceNumber = ""; // Add this new field
-  final TextEditingController _referenceController = TextEditingController(); // Add this controller
+  final TextEditingController _referenceController =
+      TextEditingController(); // Add this controller
 
   // Certificate types for dropdown
   final List<String> _certificateTypes = [
@@ -48,6 +49,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
     "Certificate": 65.0,
     "ESC Certification": 65.0,
     "Diploma": 150.0,
+    "Assessment of School Fees": 65.0
   };
 
   // Main document categories
@@ -58,22 +60,15 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
     "ESC Certification",
     "Diploma",
     "Assessment of School Fees",
-    "Other" 
+    "Other"
   ];
 
-  String _copyType = "Hard Copy"; 
-  final List<String> _copyTypes = [
-    "Hard Copy",
-    "Soft Copy"
-  ]; 
+  String _copyType = "Hard Copy";
+  final List<String> _copyTypes = ["Hard Copy", "Soft Copy"];
 
   // Add payment provider options
   String _paymentProvider = "GCash";
-  final List<String> _paymentProviders = [
-    "GCash",
-    "BDO",
-    "BPI"
-  ];
+  final List<String> _paymentProviders = ["GCash", "BDO", "BPI"];
 
   @override
   void initState() {
@@ -85,7 +80,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
   void dispose() {
     _otherController.dispose();
     _purposeController.dispose();
-    _referenceController.dispose(); 
+    _referenceController.dispose();
     super.dispose();
   }
 
@@ -168,7 +163,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
       return;
     }
 
-    if (_referenceNumber.trim().isEmpty) { 
+    if (_referenceNumber.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please enter a reference number")),
       );
@@ -207,7 +202,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
         'role': role,
         'lastUpdated': FieldValue.serverTimestamp(),
         'copyType': _copyType,
-        'referenceNumber': _referenceNumber, 
+        'referenceNumber': _referenceNumber,
         'paymentProvider': _paymentProvider,
         'price': _calculateTotalPrice(), // Add this line to store the price
       });
@@ -250,14 +245,14 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
 
   double _calculateTotalPrice() {
     if (_selectedDocument == null) return 0;
-    
+
     double basePrice = 0;
     if (_selectedDocument == "Certificate") {
       basePrice = _documentPrices["Certificate"] ?? 0;
     } else {
       basePrice = _documentPrices[_selectedDocument!] ?? 0;
     }
-    
+
     return basePrice * _quantity;
   }
 
@@ -265,16 +260,19 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFF1B9CFF),
+        backgroundColor: Color(0xFF001184),
+        foregroundColor: Color.fromARGB(255, 255, 255, 255),
+        title: Text('Request Documents'),
       ),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Colors.blue[400]!, Colors.blue[800]!],
-          ),
-        ),
+        // decoration: BoxDecoration(
+        //   gradient: LinearGradient(
+        //     begin: Alignment.topLeft,
+        //     end: Alignment.bottomRight,
+        //     colors: [Color(0xFF001184)],
+        //   ),
+        // ),
+        color: Color(0xFFE5E7ED),
         child: isLoading
             ? const Center(child: CircularProgressIndicator())
             : errorMessage.isNotEmpty
@@ -354,9 +352,61 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                             onChanged: (value) => _purposeText = value,
                           ),
                         ),
-                        const SizedBox(height: 24), 
+                        const SizedBox(height: 16),
                         _buildCard(
-                          title: 'Reference Number', 
+                          title: 'Payment Provider',
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                "Select payment provider:",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.blue[800]!,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              const SizedBox(height: 8),
+                              Text('GCash: 0917 822 7532, Jerry S. Hernandez',
+                                  style: TextStyle(color: Colors.blue[800]!)),
+                              const SizedBox(height: 8),
+                              Text(
+                                  'BDO - Concepcion Branch - SAVINGS ACCT, Account Number: 006 518 013 093',
+                                  style: TextStyle(color: Colors.blue[800]!)),
+                              const SizedBox(height: 8),
+                              Text(
+                                  'BPI - Concepcion Branch - SAVINGS ACCT, Account Number: 612 106 477 2',
+                                  style: TextStyle(color: Colors.blue[800]!)),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey[300]!),
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: Colors.grey[50],
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: _paymentProvider,
+                                    isExpanded: true,
+                                    items: _paymentProviders.map((provider) {
+                                      return DropdownMenuItem<String>(
+                                        value: provider,
+                                        child: Text(provider),
+                                      );
+                                    }).toList(),
+                                    onChanged: (value) => setState(
+                                        () => _paymentProvider = value!),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        _buildCard(
+                          title: 'Reference Number',
                           child: TextFormField(
                             controller: _referenceController,
                             decoration: InputDecoration(
@@ -382,51 +432,15 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                             onChanged: (value) => _referenceNumber = value,
                           ),
                         ),
-                        const SizedBox(height: 24),
-                        _buildCard(
-                          title: 'Payment Provider',
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Select payment provider:",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.grey[300]!),
-                                  borderRadius: BorderRadius.circular(12),
-                                  color: Colors.grey[50],
-                                ),
-                                child: DropdownButtonHideUnderline(
-                                  child: DropdownButton<String>(
-                                    value: _paymentProvider,
-                                    isExpanded: true,
-                                    items: _paymentProviders.map((provider) {
-                                      return DropdownMenuItem<String>(
-                                        value: provider,
-                                        child: Text(provider),
-                                      );
-                                    }).toList(),
-                                    onChanged: (value) => setState(() => _paymentProvider = value!),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                        // const SizedBox(height: 24),
+
                         const SizedBox(height: 32),
                         SizedBox(
                           width: double.infinity,
                           height: 50,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue[800],
+                              backgroundColor: Color(0xFF001184),
                               foregroundColor: Colors.white,
                               elevation: 2,
                               shape: RoundedRectangleBorder(

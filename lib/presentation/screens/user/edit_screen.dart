@@ -100,7 +100,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         title: Text(widget.profile.role == 'alumni'
             ? 'Edit Alumni Profile'
             : 'Edit Profile'),
-        backgroundColor: Color(0xFF1B9CFF),
+        backgroundColor: Color(0xFF001184),
+        foregroundColor: Color.fromARGB(255, 255, 255, 255),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

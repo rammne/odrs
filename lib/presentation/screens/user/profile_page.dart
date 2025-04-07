@@ -9,10 +9,10 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1B9CFF),
+      backgroundColor: const Color(0xFFE5E7ED),
       appBar: AppBar(
         title: const Text('Profile'),
-        backgroundColor: const Color(0xFF1B9CFF),
+        backgroundColor: Color(0xFF001184),
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -43,13 +43,13 @@ class ProfilePage extends StatelessWidget {
                           child: CircleAvatar(
                             radius: 50,
                             backgroundColor:
-                                const Color(0xFF1B9CFF).withOpacity(0.1),
+                                const Color(0xFF001184).withOpacity(0.1),
                             child: Text(
                               profile.name[0].toUpperCase(),
                               style: const TextStyle(
                                 fontSize: 36,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF1B9CFF),
+                                color: Color(0xFF001184),
                               ),
                             ),
                           ),
@@ -96,7 +96,7 @@ class ProfilePage extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF1B9CFF),
+                            color: Color(0xFF001184),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -104,21 +104,21 @@ class ProfilePage extends StatelessWidget {
                           icon: Icons.badge,
                           label: 'Student Number',
                           value: profile.studentNumber,
-                          color: const Color(0xFF1B9CFF),
+                          color: const Color(0xFF001185),
                         ),
                         const Divider(height: 24),
                         _InfoTile(
                           icon: Icons.school,
                           label: 'Strand',
                           value: profile.strand,
-                          color: const Color(0xFF1B9CFF),
+                          color: const Color(0xFF001184),
                         ),
                         const Divider(height: 24),
                         _InfoTile(
                           icon: Icons.phone,
                           label: 'Contact',
                           value: profile.contact,
-                          color: const Color(0xFF1B9CFF),
+                          color: const Color(0xFF001184),
                         ),
                       ],
                     ),
