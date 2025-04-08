@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
 import 'package:odrs/presentation/screens/admin/deleted_requests_screen.dart';
 import 'package:odrs/presentation/screens/admin/completed_requests_screen.dart';
 import '../../../utils/pdf_generator.dart';
@@ -59,26 +60,29 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'This action cannot be undone and the status cannot be changed afterwards.',
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(color: const Color(0xFF001184)),
                   textAlign: TextAlign.center,
                 ),
               ],
             ),
             actions: [
               TextButton(
-                child: const Text('Cancel'),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(color: const Color(0xFF001184)),
+                ),
                 onPressed: () => Navigator.pop(context, false),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
+                  backgroundColor: const Color(0xFF001184),
                 ),
-                child: Text('Yes, mark as $newStatus'),
+                child: Text(
+                  'Yes, mark as $newStatus',
+                  style: TextStyle(color: const Color(0xFFFFFFFF)),
+                ),
                 onPressed: () => Navigator.pop(context, true),
               ),
             ],
@@ -274,10 +278,7 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
         referenceNumber: data['referenceNumber'],
         paymentProvider: data['paymentProvider'],
         price: data['price'],
-        claimingMethod: data['claimingMethod'] ?? 'Pick-up',
-        requestingSchool: data['sf10OfficialInfo'],
-        principalSignatory: data['principalSignatory'],
-        guidanceCounselorSignatory: data['guidanceCounselorSignatory'],
+        claimingMethod: data['claimingMethod'],
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -308,7 +309,7 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
           "Admin - Document Requests",
           style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: Color(0xFF1B9CFF),
+        backgroundColor: const Color(0xFF001184), // App bar color
         actions: [
           IconButton(
             icon: const Icon(Icons.check_circle_outline, color: Colors.white),
@@ -388,32 +389,82 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _infoRow("Name", data['name'] ?? ""),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 8, horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF001184).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Text(
+                                    'Request ID: ',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      data['requestId'] ?? '',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        color: Color(0xFF001184),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.copy),
+                                    color: const Color(0xFF001184),
+                                    onPressed: () {
+                                      final requestId = data['requestId'];
+                                      if (requestId != null &&
+                                          requestId.isNotEmpty) {
+                                        Clipboard.setData(
+                                            ClipboardData(text: requestId));
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                                'Request ID copied to clipboard'),
+                                            duration: Duration(seconds: 2),
+                                            backgroundColor: Color(0xFF001184),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    tooltip: 'Copy Request ID',
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            _infoRow('Status:', data['status'] ?? ''),
                             _infoRow(
-                                "Student No.", data['studentNumber'] ?? ""),
-                            _infoRow("Contact", data['contact'] ?? ""),
+                              'Date Requested:',
+                              data['dateRequested']
+                                      ?.toDate()
+                                      ?.toString()
+                                      .split('.')[0] ??
+                                  '',
+                            ),
                             _infoRow(
-                                "Date Requested",
-                                (data['dateRequested'] as Timestamp?)
-                                        ?.toDate()
-                                        .toString() ??
-                                    "Unknown"),
-                            if (data['requestingSchool'] != null && data['requestingSchool'].toString().isNotEmpty)
-                              _infoRow("Requesting School", data['requestingSchool']),
-                            if (data['principalSignatory'] == true || data['guidanceCounselorSignatory'] == true)
-                              _infoRow("Signatories", [
-                                if (data['principalSignatory'] == true) "Principal",
-                                if (data['guidanceCounselorSignatory'] == true) "Guidance Counselor",
-                              ].join(" and ")),
+                              'Last Updated:',
+                              data['lastUpdated']
+                                      ?.toDate()
+                                      ?.toString()
+                                      .split('.')[0] ??
+                                  '',
+                            ),
+                            _infoRow('Name:', data['name'] ?? ''),
                             _infoRow(
-                                "Last Updated",
-                                (data['lastUpdated'] as Timestamp?)
-                                        ?.toDate()
-                                        .toString() ??
-                                    "Not yet updated"),
+                                'Student No.:', data['studentNumber'] ?? ''),
+                            _infoRow('Contact:', data['contact'] ?? ''),
                             _documentInfo(data),
                             _purposeInfo(data),
-                            _infoRow("Status", data['status'] ?? "Unknown"),
+                            _relationshipInfo(data),
                             if (data['status'] == 'Processing' &&
                                 data['processingLocation'] != null)
                               _infoRow("Processing Location",
@@ -446,7 +497,7 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
 
   Widget _infoRow(String label, String value) {
     Color? textColor;
-    if (label == "Status") {
+    if (label == "Status:") {
       switch (value) {
         case 'Pending':
           textColor = Colors.grey;
@@ -496,14 +547,6 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
           ),
           Text(
               "${data['documentName']} (${data['quantity']} copies, ${data['copyType'] ?? 'Original'})"),
-          if (data['documentName'] == 'SF10 (F137)' && data['copyType'] == 'Official' && data['requestingSchool'] != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 4.0),
-              child: Text(
-                "Requesting School: ${data['requestingSchool']}",
-                style: const TextStyle(fontStyle: FontStyle.italic),
-              ),
-            ),
         ],
       );
     } else if (data.containsKey('documents')) {
@@ -542,6 +585,24 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
               Text("Purpose:", style: TextStyle(fontWeight: FontWeight.bold)),
         ),
         Text(data['purpose']),
+      ],
+    );
+  }
+
+  Widget _relationshipInfo(Map<String, dynamic> data) {
+    if (!data.containsKey('relationshipToLearner') ||
+        !data.containsKey('relationshipType')) {
+      return const SizedBox.shrink();
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(top: 8.0, bottom: 4.0),
+          child: Text("Relationship to Learner:",
+              style: TextStyle(fontWeight: FontWeight.bold)),
+        ),
+        Text("${data['relationshipType']} - ${data['relationshipToLearner']}"),
       ],
     );
   }

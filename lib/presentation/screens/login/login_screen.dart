@@ -473,7 +473,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               height: 50,
                               child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue[800],
+                                  backgroundColor: const Color(0xFF001184),
                                   foregroundColor: Colors.white,
                                   elevation: 2,
                                   shape: RoundedRectangleBorder(
@@ -496,7 +496,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               height: 50,
                               child: OutlinedButton(
                                 style: OutlinedButton.styleFrom(
-                                  side: BorderSide(color: Colors.blue[800]!),
+                                  side: BorderSide(
+                                      color: const Color(0xFF001184)),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -505,7 +506,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 child: Text(
                                   "Continue as Guest",
                                   style: TextStyle(
-                                    color: Colors.blue[800],
+                                    color: const Color(0xFF001184),
                                     fontSize: 16,
                                   ),
                                 ),
@@ -518,10 +519,11 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: OutlinedButton.icon(
                                 icon: Icon(
                                   Icons.search,
-                                  color: Colors.blue[800],
+                                  color: const Color(0xFF001184),
                                 ),
                                 style: OutlinedButton.styleFrom(
-                                  side: BorderSide(color: Colors.blue[800]!),
+                                  side: BorderSide(
+                                      color: const Color(0xFF001184)),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -539,7 +541,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 label: Text(
                                   "Quick Search",
                                   style: TextStyle(
-                                    color: Colors.blue[800],
+                                    color: const Color(0xFF001184),
                                     fontSize: 16,
                                   ),
                                 ),
@@ -556,7 +558,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.blue[800],
+                        color: const Color(0xFF001184),
                       ),
                     ),
                     const SizedBox(height: 16),

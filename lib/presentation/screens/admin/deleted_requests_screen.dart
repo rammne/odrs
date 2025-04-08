@@ -12,6 +12,8 @@ class DeletedRequestsScreen extends StatefulWidget {
 class _DeletedRequestsScreenState extends State<DeletedRequestsScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  Set<String> _selectedRequests = {};
+  bool _isSelectionMode = false;
 
   String formatDate(Timestamp timestamp) {
     return DateFormat('MMMM d, yyyy \'at\' h:mm a').format(timestamp.toDate());
@@ -21,8 +23,57 @@ class _DeletedRequestsScreenState extends State<DeletedRequestsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Deleted Requests'),
-        backgroundColor: Color(0xFF1B9CFF),
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+          ),
+          onPressed: () {
+            if (_isSelectionMode) {
+              setState(() {
+                _isSelectionMode = false;
+                _selectedRequests.clear();
+              });
+            } else {
+              Navigator.of(context).pop();
+            }
+          },
+        ),
+        title: Text(
+          _isSelectionMode
+              ? '${_selectedRequests.length} Selected'
+              : 'Deleted Requests',
+          style: TextStyle(color: Color(0xFFFFFFFF)),
+        ),
+        backgroundColor: Color(0xFF001184),
+        actions: [
+          if (!_isSelectionMode)
+            IconButton(
+              icon: Icon(Icons.delete_forever, color: Colors.white),
+              onPressed: () {
+                setState(() {
+                  _isSelectionMode = true;
+                });
+              },
+            )
+          else ...[
+            IconButton(
+              icon: Icon(Icons.close, color: Colors.white),
+              onPressed: () {
+                setState(() {
+                  _isSelectionMode = false;
+                  _selectedRequests.clear();
+                });
+              },
+            ),
+            IconButton(
+              icon: Icon(Icons.delete_forever, color: Colors.white),
+              onPressed: _selectedRequests.isEmpty
+                  ? null
+                  : () => _confirmDelete(context),
+            ),
+          ],
+        ],
       ),
       body: Column(
         children: [
@@ -81,6 +132,20 @@ class _DeletedRequestsScreenState extends State<DeletedRequestsScreen> {
                       margin: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 8),
                       child: ExpansionTile(
+                        leading: _isSelectionMode
+                            ? Checkbox(
+                                value: _selectedRequests.contains(doc.id),
+                                onChanged: (bool? value) {
+                                  setState(() {
+                                    if (value == true) {
+                                      _selectedRequests.add(doc.id);
+                                    } else {
+                                      _selectedRequests.remove(doc.id);
+                                    }
+                                  });
+                                },
+                              )
+                            : null,
                         title: Text('Request by ${data['name'] ?? 'Unknown'}'),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,5 +228,66 @@ class _DeletedRequestsScreenState extends State<DeletedRequestsScreen> {
       return Text('${data['documentName']} (${data['quantity']} copies)');
     }
     return const Text('No document information available');
+  }
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Permanent Deletion'),
+        content: Text(
+          'Are you sure you want to permanently delete ${_selectedRequests.length} selected request(s)? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('CANCEL'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: const Text('DELETE'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final batch = FirebaseFirestore.instance.batch();
+        for (final requestId in _selectedRequests) {
+          final docRef = FirebaseFirestore.instance
+              .collection('deleted_requests')
+              .doc(requestId);
+          batch.delete(docRef);
+        }
+        await batch.commit();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  'Successfully deleted ${_selectedRequests.length} request(s)'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          setState(() {
+            _isSelectionMode = false;
+            _selectedRequests.clear();
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to delete requests. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
   }
 }
