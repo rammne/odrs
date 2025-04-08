@@ -274,6 +274,10 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
         referenceNumber: data['referenceNumber'],
         paymentProvider: data['paymentProvider'],
         price: data['price'],
+        claimingMethod: data['claimingMethod'] ?? 'Pick-up',
+        requestingSchool: data['sf10OfficialInfo'],
+        principalSignatory: data['principalSignatory'],
+        guidanceCounselorSignatory: data['guidanceCounselorSignatory'],
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -394,6 +398,13 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
                                         ?.toDate()
                                         .toString() ??
                                     "Unknown"),
+                            if (data['requestingSchool'] != null && data['requestingSchool'].toString().isNotEmpty)
+                              _infoRow("Requesting School", data['requestingSchool']),
+                            if (data['principalSignatory'] == true || data['guidanceCounselorSignatory'] == true)
+                              _infoRow("Signatories", [
+                                if (data['principalSignatory'] == true) "Principal",
+                                if (data['guidanceCounselorSignatory'] == true) "Guidance Counselor",
+                              ].join(" and ")),
                             _infoRow(
                                 "Last Updated",
                                 (data['lastUpdated'] as Timestamp?)
@@ -485,6 +496,14 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
           ),
           Text(
               "${data['documentName']} (${data['quantity']} copies, ${data['copyType'] ?? 'Original'})"),
+          if (data['documentName'] == 'SF10 (F137)' && data['copyType'] == 'Official' && data['requestingSchool'] != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4.0),
+              child: Text(
+                "Requesting School: ${data['requestingSchool']}",
+                style: const TextStyle(fontStyle: FontStyle.italic),
+              ),
+            ),
         ],
       );
     } else if (data.containsKey('documents')) {

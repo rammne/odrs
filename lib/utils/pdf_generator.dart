@@ -13,8 +13,12 @@ class RequestReceiptGenerator {
     required String purpose,
     required String copyType,
     required String referenceNumber,
-    required String paymentProvider, // Add this parameter
-    required double price, // Add this parameter
+    required String paymentProvider,
+    required double price,
+    required String claimingMethod,
+    String? requestingSchool,
+    bool? principalSignatory,
+    bool? guidanceCounselorSignatory
   }) async {
     final pdf = pw.Document();
 
@@ -43,7 +47,19 @@ class RequestReceiptGenerator {
               pw.Text('Requested Documents:'),
               ...documents.entries
                   .map((doc) => pw.Text('- ${doc.key} (${doc.value} copies)')),
+              if (principalSignatory != null || guidanceCounselorSignatory != null) ...[                
+                pw.SizedBox(height: 20),
+                pw.Text('Signatories:'),
+                if (principalSignatory == true)
+                  pw.Text('- Principal'),
+                if (guidanceCounselorSignatory == true)
+                  pw.Text('- Guidance Counselor'),
+              ],
               pw.SizedBox(height: 20),
+              if (requestingSchool != null) ...[
+                pw.Text('Requesting School: $requestingSchool'),
+                pw.SizedBox(height: 20),
+              ],
               pw.Text('Purpose:'),
               pw.Text(purpose), 
               pw.SizedBox(height: 20),
@@ -54,6 +70,15 @@ class RequestReceiptGenerator {
               pw.Text('Payment Details:'),
               pw.Text('Provider: $paymentProvider'),
               pw.Text('Total Amount: PHP ${price.toStringAsFixed(2)}'),
+              pw.SizedBox(height: 20),
+              pw.Text('Claiming Method: $claimingMethod'),
+              if (claimingMethod == 'Delivery')
+                pw.Text('Note: Requesting party will do the booking and shoulder the shipping fee'),
+              if (requestingSchool != null) ...[
+                pw.SizedBox(height: 20),
+                pw.Text('Note: Present/Submit an official letter from the requesting school upon claiming the document.',
+                    style: pw.TextStyle(color: PdfColors.black)),
+              ],
               pw.SizedBox(height: 40),
               pw.Text(
                   'Please present a copy (soft copy or hard copy) of this receipt when claiming your documents.'),
@@ -83,6 +108,10 @@ class RequestReceiptGenerator {
     required String referenceNumber,
     required String paymentProvider,
     required double price,
+    required String claimingMethod,
+    String? requestingSchool,
+    bool? principalSignatory,
+    bool? guidanceCounselorSignatory,
   }) async {
     final pdf = pw.Document();
 
@@ -111,7 +140,22 @@ class RequestReceiptGenerator {
               pw.Text('Requested Documents:'),
               ...documents.entries
                   .map((doc) => pw.Text('- ${doc.key} (${doc.value} copies)')),
+              if (principalSignatory != null || guidanceCounselorSignatory != null) ...[                
+                pw.SizedBox(height: 20),
+                pw.Text('Signatories:'),
+                if (principalSignatory == true)
+                  pw.Text('- Principal'),
+                if (guidanceCounselorSignatory == true)
+                  pw.Text('- Guidance Counselor'),
+              ],
               pw.SizedBox(height: 20),
+              if (requestingSchool != null) ...[
+                pw.Text('Requesting School: $requestingSchool'),
+                pw.SizedBox(height: 10),
+                pw.Text('Note: Present/Submit an official letter from the requesting school upon claiming the document.',
+                    style: pw.TextStyle(color: PdfColors.red)),
+                pw.SizedBox(height: 20),
+              ],
               pw.Text('Purpose:'),
               pw.Text(purpose),
               pw.SizedBox(height: 20),
@@ -122,6 +166,15 @@ class RequestReceiptGenerator {
               pw.Text('Payment Details:'),
               pw.Text('Provider: $paymentProvider'),
               pw.Text('Total Amount: PHP ${price.toStringAsFixed(2)}'),
+              pw.SizedBox(height: 20),
+              pw.Text('Claiming Method: $claimingMethod'),
+              if (claimingMethod == 'Delivery')
+                pw.Text('Note: Requesting party will do the booking and shoulder the shipping fee'),
+              if (requestingSchool != null) ...[
+                pw.SizedBox(height: 20),
+                pw.Text('Note: Present/Submit an official letter from the requesting school upon claiming the document.',
+                    style: pw.TextStyle(color: PdfColors.black)),
+              ],
               pw.SizedBox(height: 40),
               pw.Text(
                   'Please present a copy (soft copy or hard copy) of this receipt when claiming your documents.'),

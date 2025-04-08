@@ -279,6 +279,10 @@ class AUserProfileScreen extends StatelessWidget {
         referenceNumber: data['referenceNumber'],
         paymentProvider: data['paymentProvider'] ?? 'N/A',
         price: (data['price'] ?? 0.0).toDouble(),
+        claimingMethod: data['claimingMethod'] ?? 'Pick-up',
+        requestingSchool: data['sf10OfficialInfo'],
+        principalSignatory: data['principalSignatory'],
+        guidanceCounselorSignatory: data['guidanceCounselorSignatory'],
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

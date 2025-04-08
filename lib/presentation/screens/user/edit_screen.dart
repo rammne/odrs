@@ -26,6 +26,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String? _yearGraduated;
   bool _isSaving = false;
 
+
   @override
   void initState() {
     super.initState();
@@ -36,11 +37,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _firstName = widget.profile.firstName;
     _lastName = widget.profile.lastName;
     _yearGraduated = widget.profile.yearGraduated;
+
   }
+
+
 
   Future<void> _saveProfile() async {
     if (!mounted) return;
     if (!(_formKey.currentState?.validate() ?? false)) return;
+
+
 
     setState(() => _isSaving = true);
 
@@ -59,11 +65,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         strand: _course,
         role: widget.profile.role,
         yearGraduated: _yearGraduated,
+        lastCourseEditDate: _course != widget.profile.strand ? DateTime.now() : widget.profile.lastCourseEditDate,
       );
 
       await widget.userRepository.updateUserProfile(updatedProfile);
 
       if (!mounted) return;
+
+
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Profile updated successfully')),

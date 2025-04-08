@@ -12,6 +12,20 @@ class RequestHistoryScreen extends StatelessWidget {
     return DateFormat('MMMM d, yyyy \'at\' h:mm a').format(timestamp.toDate());
   }
 
+  String _getSignatoriesText(Map<String, dynamic> requestData) {
+    final hasPrincipal = requestData['principalSignatory'] != null;
+    final hasGuidance = requestData['guidanceCounselorSignatory'] != null;
+
+    if (hasPrincipal && hasGuidance) {
+      return 'Principal and Guidance Counselor';
+    } else if (hasPrincipal) {
+      return 'Principal';
+    } else if (hasGuidance) {
+      return 'Guidance Counselor';
+    }
+    return 'None';
+  }
+
   Stream<List<QuerySnapshot>> getAllUserRequests(String userId) {
     final activeRequests = FirebaseFirestore.instance
         .collection('document_requests')
@@ -98,17 +112,16 @@ class RequestHistoryScreen extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final requestData =
                         allRequests[index].data() as Map<String, dynamic>;
+                    print('DEBUG: Full request data: $requestData');
                     if (!requestData.containsKey('documents')) {
                       print(
                           'DEBUG: Missing "documents" field in Firestore document: $requestData');
                     }
 
-                    final documents =
-                        (requestData['documents'] as Map<String, dynamic>?) ??
-                            {};
-                    final documentsList = documents.entries
-                        .map((e) => '${e.key}: ${e.value}')
-                        .join('\n');
+                    final documentName = requestData['documentName'] ?? '';
+                    final quantity = requestData['quantity']?.toString() ?? '';
+                    final copyType = requestData['copyType'] ?? 'Original';
+                    final documentsList = '$documentName: $quantity ($copyType)';
 
                     return Card(
                       margin: const EdgeInsets.symmetric(
@@ -125,7 +138,9 @@ class RequestHistoryScreen extends StatelessWidget {
                                     'Student Number: ${requestData['studentNumber'] ?? 'N/A'}'),
                                 Text(
                                     'Contact: ${requestData['contact'] ?? 'N/A'}'),
-                                Text('Documents Requested:\n$documentsList'),
+                                Text('Document Requested:\n$documentsList'),
+                                if (requestData['principalSignatory'] != null || requestData['guidanceCounselorSignatory'] != null)
+                                  Text('Signatories: ${_getSignatoriesText(requestData)}'),
                                 Text(
                                     'Date Requested: ${formatDate(requestData['dateRequested'])}'),
                                 Text(
@@ -189,6 +204,10 @@ class RequestHistoryScreen extends StatelessWidget {
                                               'N/A',
                                       price: (requestData['price'] ?? 0.0)
                                           .toDouble(),
+                                      claimingMethod: requestData['claimingMethod'] ?? 'Pick-up',
+                                      requestingSchool: requestData['sf10OfficialInfo'],
+                                      principalSignatory: requestData['principalSignatory'],
+                                      guidanceCounselorSignatory: requestData['guidanceCounselorSignatory'],
                                     );
                                   },
                                 ),

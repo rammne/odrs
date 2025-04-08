@@ -21,6 +21,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
   bool isLoading = true;
   String errorMessage = "";
 
+
   // Document Request Data
   String? _selectedDocument;
   int _quantity = 1;
@@ -32,6 +33,10 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
   final TextEditingController _referenceController =
       TextEditingController(); // Add this controller
 
+  // SF10 Official text field
+  String _sf10OfficialText = "";
+  final TextEditingController _sf10OfficialController = TextEditingController();
+
   // Certificate types for dropdown
   final List<String> _certificateTypes = [
     "Certificate of Graduation",
@@ -41,6 +46,8 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
     "Good Moral Certificate"
   ];
   String? _selectedCertificateType;
+  bool _principalSignatory = false;
+  bool _guidanceCounselorSignatory = false;
 
   // Document prices
   final Map<String, double> _documentPrices = {
@@ -70,10 +77,15 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
   String _paymentProvider = "GCash";
   final List<String> _paymentProviders = ["GCash", "BDO", "BPI"];
 
+  // Method of claiming options
+  String _claimingMethod = "Pick-up";
+  final List<String> _claimingMethods = ["Pick-up", "Delivery"];
+
   @override
   void initState() {
     super.initState();
     _fetchUserData();
+
   }
 
   @override
@@ -81,8 +93,11 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
     _otherController.dispose();
     _purposeController.dispose();
     _referenceController.dispose();
+    _sf10OfficialController.dispose();
     super.dispose();
   }
+
+
 
   Future<void> _fetchUserData() async {
     try {
@@ -148,6 +163,17 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
       return;
     }
 
+    if (_selectedDocument == "Certificate" &&
+        _selectedCertificateType == "Good Moral Certificate" &&
+        !_principalSignatory &&
+        !_guidanceCounselorSignatory) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text("Please select at least one signatory for Good Moral Certificate")),
+      );
+      return;
+    }
+
     if (_selectedDocument == "Other" && _otherDocumentText.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please specify the document you need")),
@@ -166,6 +192,13 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
     if (_referenceNumber.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please enter a reference number")),
+      );
+      return;
+    }
+
+    if (_selectedDocument == "SF10 (F137) Official" && _sf10OfficialText.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter the requesting school")),
       );
       return;
     }
@@ -199,12 +232,16 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
         'status': 'Pending',
         'processingLocation': null,
         'cancellationReason': null,
+        'claimingMethod': _claimingMethod,
         'role': role,
         'lastUpdated': FieldValue.serverTimestamp(),
         'copyType': _copyType,
         'referenceNumber': _referenceNumber,
         'paymentProvider': _paymentProvider,
         'price': _calculateTotalPrice(), // Add this line to store the price
+        'principalSignatory': _selectedCertificateType == "Good Moral Certificate" ? _principalSignatory : null,
+        'guidanceCounselorSignatory': _selectedCertificateType == "Good Moral Certificate" ? _guidanceCounselorSignatory : null,
+        'sf10OfficialInfo': _selectedDocument == "SF10 (F137) Official" ? _sf10OfficialText : null
       });
 
       // Generate and show receipt
@@ -218,8 +255,12 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
         purpose: _purposeText,
         copyType: _copyType,
         referenceNumber: _referenceNumber,
-        paymentProvider: _paymentProvider, // Add this line
-        price: _calculateTotalPrice(), // Add this line
+        paymentProvider: _paymentProvider,
+        price: _calculateTotalPrice(),
+        claimingMethod: _claimingMethod,
+        requestingSchool: _selectedDocument == "SF10 (F137) Official" ? _sf10OfficialText : null,
+        principalSignatory: _selectedDocument == "Certificate" && _selectedCertificateType == "Good Moral Certificate" ? _principalSignatory : null,
+        guidanceCounselorSignatory: _selectedDocument == "Certificate" && _selectedCertificateType == "Good Moral Certificate" ? _guidanceCounselorSignatory : null
       );
 
       setState(() {
@@ -318,6 +359,57 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                                 _buildCertificateDropdown(),
                               if (_selectedDocument == "Other")
                                 _buildOtherDocumentField(),
+                              if (_selectedDocument == "SF10 (F137) Official")
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const SizedBox(height: 16),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          "Requesting School:",
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                        const Text(
+                                          " *",
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.red,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 10),
+                                    TextFormField(
+                                      controller: _sf10OfficialController,
+                                      decoration: InputDecoration(
+                                        hintText: "Enter the name of requesting school",
+                                        fillColor: Colors.grey[50],
+                                        filled: true,
+                                        errorText: _sf10OfficialText.trim().isEmpty ? "Required" : null,
+                                        helperText: "Note: Present/Submit an official letter from the requesting school upon claiming the document.",
+                                        helperMaxLines: 2,
+                                        helperStyle: TextStyle(color: const Color.fromARGB(255, 8, 8, 8)),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                          borderSide: BorderSide(color: Colors.grey[300]!),
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                          borderSide: BorderSide(color: Colors.grey[300]!),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                          borderSide: BorderSide(color: Colors.blue[800]!, width: 2),
+                                        ),
+                                      ),
+                                      onChanged: (value) => setState(() => _sf10OfficialText = value),
+                                    ),
+                                  ],
+                                ),
                               if (_selectedDocument != null)
                                 _buildQuantitySelector(),
                             ],
@@ -377,6 +469,13 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                               Text(
                                   'BPI - Concepcion Branch - SAVINGS ACCT, Account Number: 612 106 477 2',
                                   style: TextStyle(color: Colors.blue[800]!)),
+                              const SizedBox(height: 16),
+                              Text(
+                                  'Note: Send a proof of payment together with your name and student number as the email subject to pscashier@olopsc.edu.ph (Pre-School), gscashier@olopsc.edu.ph (Grade School), hscashier@olopsc.edu.ph (High School)',
+                                  style: TextStyle(
+                                    color: const Color.fromARGB(255, 10, 10, 10),
+                                    fontStyle: FontStyle.italic,
+                                  )),
                               const SizedBox(height: 8),
                               Container(
                                 padding:
@@ -434,6 +533,56 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                         ),
                         // const SizedBox(height: 24),
 
+                        const SizedBox(height: 24),
+                        _buildCard(
+                          title: 'Claiming Method',
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                "Select method of claiming:",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey[300]!),
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: Colors.grey[50],
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: _claimingMethod,
+                                    isExpanded: true,
+                                    items: _claimingMethods.map((method) {
+                                      return DropdownMenuItem<String>(
+                                        value: method,
+                                        child: Text(method[0].toUpperCase() + method.substring(1)),
+                                      );
+                                    }).toList(),
+                                    onChanged: (value) => setState(
+                                        () => _claimingMethod = value!),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                _claimingMethod == "Delivery" 
+                                  ? "Note: Requesting party will do the booking and shoulder the shipping fee"
+                                  : "Note: If representative, please bring an authorization letter and a photocopy of valid ID",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                         const SizedBox(height: 32),
                         SizedBox(
                           width: double.infinity,
@@ -568,11 +717,44 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                   child: Text(type),
                 );
               }).toList(),
-              onChanged: (value) =>
-                  setState(() => _selectedCertificateType = value),
+              onChanged: (value) => setState(() {
+                _selectedCertificateType = value;
+                if (value == "Good Moral Certificate") {
+                  _principalSignatory = true;  // Set default selection
+                  _guidanceCounselorSignatory = false;
+                } else {
+                  _principalSignatory = false;
+                  _guidanceCounselorSignatory = false;
+                }
+              }),
             ),
           ),
         ),
+        if (_selectedCertificateType == "Good Moral Certificate") ...[  
+          const SizedBox(height: 16),
+          CheckboxListTile(
+            title: const Text("Principal Signatory"),
+            value: _principalSignatory,
+            onChanged: (bool? value) {
+              setState(() {
+                _principalSignatory = value ?? false;
+              });
+            },
+            controlAffinity: ListTileControlAffinity.leading,
+            activeColor: Colors.blue[800],
+          ),
+          CheckboxListTile(
+            title: const Text("Guidance Counselor Signatory"),
+            value: _guidanceCounselorSignatory,
+            onChanged: (bool? value) {
+              setState(() {
+                _guidanceCounselorSignatory = value ?? false;
+              });
+            },
+            controlAffinity: ListTileControlAffinity.leading,
+            activeColor: Colors.blue[800],
+          ),
+        ],
       ],
     );
   }

@@ -6,6 +6,7 @@ import 'package:odrs/presentation/screens/user/edit_screen.dart';
 import 'package:odrs/presentation/screens/user/profile_page.dart';
 import 'package:odrs/presentation/screens/user/report_screen.dart';
 import 'package:odrs/presentation/screens/user/request_history_screen.dart';
+import 'package:odrs/presentation/screens/user/help_screen.dart';
 
 class UserProfile {
   final String uid;
@@ -18,6 +19,7 @@ class UserProfile {
   final String strand; // Changed from course
   final String role;
   final String? yearGraduated; // New field for alumni
+  final DateTime? lastCourseEditDate; // Track when course was last edited
 
   UserProfile({
     required this.uid,
@@ -30,6 +32,7 @@ class UserProfile {
     required this.strand, // Changed from course
     required this.role,
     this.yearGraduated,
+    this.lastCourseEditDate,
   });
 
   factory UserProfile.fromFirestore(DocumentSnapshot doc) {
@@ -45,6 +48,7 @@ class UserProfile {
       strand: data['strand'] ?? 'Undefined', // Changed from course
       role: data['role'] ?? 'user',
       yearGraduated: data['yearGraduated'],
+      lastCourseEditDate: data['lastCourseEditDate'] != null ? (data['lastCourseEditDate'] as Timestamp).toDate() : null,
     );
   }
 
@@ -58,6 +62,7 @@ class UserProfile {
         'strand': strand, // Changed from course
         'role': role,
         'yearGraduated': yearGraduated,
+        'lastCourseEditDate': lastCourseEditDate != null ? Timestamp.fromDate(lastCourseEditDate!) : null,
       };
 
   UserProfile copyWith({
@@ -275,6 +280,19 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => const ReportScreen(),
+                ),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.help),
+            title: const Text('Help'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const HelpScreen(),
                 ),
               );
             },
