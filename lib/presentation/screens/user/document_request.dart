@@ -43,8 +43,11 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
     "Certificate of Completion",
     "Certificate of Enrollment",
     "Certificate of Attendance",
-    "Good Moral Certificate"
+    "Good Moral Certificate",
+    "Other"
   ];
+  String _otherCertificateText = "";
+  final TextEditingController _otherCertificateController = TextEditingController();
   String? _selectedCertificateType;
   bool _principalSignatory = false;
   bool _guidanceCounselorSignatory = false;
@@ -81,6 +84,12 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
   String _claimingMethod = "Pick-up";
   final List<String> _claimingMethods = ["Pick-up", "Delivery"];
 
+  // Relationship to learner options
+  String _relationship = "Myself";
+  final List<String> _relationshipTypes = ["Parent", "Guardian", "Myself", "Other"];
+  String _otherRelationship = "";
+  final TextEditingController _otherRelationshipController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -94,6 +103,8 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
     _purposeController.dispose();
     _referenceController.dispose();
     _sf10OfficialController.dispose();
+    _otherCertificateController.dispose();
+    _otherRelationshipController.dispose();
     super.dispose();
   }
 
@@ -196,6 +207,13 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
       return;
     }
 
+    if (_relationship == "Other" && _otherRelationship.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please specify your relationship to the learner")),
+      );
+      return;
+    }
+
     if (_selectedDocument == "SF10 (F137) Official" && _sf10OfficialText.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please enter the requesting school")),
@@ -204,7 +222,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
     }
 
     String finalDocumentName = _selectedDocument == "Certificate"
-        ? _selectedCertificateType!
+        ? (_selectedCertificateType == "Other" ? _otherCertificateText : _selectedCertificateType!)
         : (_selectedDocument == "Other"
             ? _otherDocumentText
             : _selectedDocument!);
@@ -241,7 +259,8 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
         'price': _calculateTotalPrice(), // Add this line to store the price
         'principalSignatory': _selectedCertificateType == "Good Moral Certificate" ? _principalSignatory : null,
         'guidanceCounselorSignatory': _selectedCertificateType == "Good Moral Certificate" ? _guidanceCounselorSignatory : null,
-        'sf10OfficialInfo': _selectedDocument == "SF10 (F137) Official" ? _sf10OfficialText : null
+        'sf10OfficialInfo': _selectedDocument == "SF10 (F137) Official" ? _sf10OfficialText : null,
+        'relationship': _relationship == "Other" ? _otherRelationship : _relationship
       });
 
       // Generate and show receipt
@@ -442,6 +461,84 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                               ),
                             ),
                             onChanged: (value) => _purposeText = value,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildCard(
+                          title: 'Relationship to Learner',
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Select your relationship:",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              ...List.generate(_relationshipTypes.length, (index) {
+                                final type = _relationshipTypes[index];
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: 8),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: _relationship == type
+                                          ? Colors.blue[800]!
+                                          : Colors.grey[300]!,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: RadioListTile<String>(
+                                    title: Text(type),
+                                    value: type,
+                                    groupValue: _relationship,
+                                    onChanged: (value) => setState(() {
+                                      _relationship = value!;
+                                      if (value != "Other") {
+                                        _otherRelationship = "";
+                                        _otherRelationshipController.clear();
+                                      }
+                                    }),
+                                    activeColor: Colors.blue[800],
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 4),
+                                  ),
+                                );
+                              }),
+                              if (_relationship == "Other") ...[  
+                                const SizedBox(height: 16),
+                                Text(
+                                  "Specify your relationship:",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                TextFormField(
+                                  controller: _otherRelationshipController,
+                                  decoration: InputDecoration(
+                                    hintText: "Enter your relationship to the learner",
+                                    fillColor: Colors.grey[50],
+                                    filled: true,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: Colors.grey[300]!),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: Colors.grey[300]!),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: Colors.blue[800]!, width: 2),
+                                    ),
+                                  ),
+                                  onChanged: (value) => setState(() => _otherRelationship = value),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -661,7 +758,12 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(docName),
+            Expanded(
+              child: Text(
+                docName,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
             if (_documentPrices.containsKey(docName))
               Text(
                 '₱${_documentPrices[docName]?.toStringAsFixed(2)}',
@@ -714,7 +816,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
               items: _certificateTypes.map((type) {
                 return DropdownMenuItem<String>(
                   value: type,
-                  child: Text(type),
+                  child: Text(type, overflow: TextOverflow.ellipsis),
                 );
               }).toList(),
               onChanged: (value) => setState(() {
@@ -726,10 +828,46 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                   _principalSignatory = false;
                   _guidanceCounselorSignatory = false;
                 }
+                if (value != "Other") {
+                  _otherCertificateText = "";
+                  _otherCertificateController.clear();
+                }
               }),
             ),
           ),
         ),
+        if (_selectedCertificateType == "Other") ...[  
+          const SizedBox(height: 16),
+          Text(
+            "Specify the certificate type:",
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _otherCertificateController,
+            decoration: InputDecoration(
+              hintText: "Enter the certificate type",
+              fillColor: Colors.grey[50],
+              filled: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.blue[800]!, width: 2),
+              ),
+            ),
+            onChanged: (value) => setState(() => _otherCertificateText = value),
+          ),
+        ],
         if (_selectedCertificateType == "Good Moral Certificate") ...[  
           const SizedBox(height: 16),
           CheckboxListTile(
@@ -797,6 +935,48 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
     );
   }
 
+  Widget _buildQuantitySelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 16),
+        Text(
+          "Number of copies (max 3):",
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.grey[600],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            IconButton(
+              onPressed: () => setState(() {
+                if (_quantity > 1) _quantity--;
+              }),
+              icon: const Icon(Icons.remove_circle_outline),
+              color: Colors.blue[800],
+            ),
+            Text(
+              _quantity.toString(),
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            IconButton(
+              onPressed: () => setState(() {
+                if (_quantity < 3) _quantity++;
+              }),
+              icon: const Icon(Icons.add_circle_outline),
+              color: _quantity >= 3 ? Colors.grey : Colors.blue[800],
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _infoRow(String label, String value) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -819,95 +999,95 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
     );
   }
 
-  Widget _buildQuantitySelector() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 24),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              "Number of copies:",
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
-            ),
-            Text(
-              "Total: ₱${_calculateTotalPrice().toStringAsFixed(2)}",
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.blue[800],
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey[300]!),
-            borderRadius: BorderRadius.circular(12),
-            color: Colors.grey[50],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: Icon(Icons.remove, color: Colors.blue[800]),
-                onPressed: () {
-                  if (_quantity > 1) {
-                    setState(() => _quantity--);
-                  }
-                },
-              ),
-              const SizedBox(width: 16),
-              Text(
-                '$_quantity',
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(width: 16),
-              IconButton(
-                icon: Icon(Icons.add, color: Colors.blue[800]),
-                onPressed: () => setState(() => _quantity++),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 24),
-        Text(
-          "Copy Type:",
-          style: TextStyle(
-            fontSize: 16,
-            color: Colors.grey[600],
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey[300]!),
-            borderRadius: BorderRadius.circular(12),
-            color: Colors.grey[50],
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _copyType,
-              isExpanded: true,
-              items: _copyTypes.map((type) {
-                return DropdownMenuItem<String>(
-                  value: type,
-                  child: Text(type),
-                );
-              }).toList(),
-              onChanged: (value) => setState(() => _copyType = value!),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+  // Widget _buildQuantitySelector() {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       const SizedBox(height: 24),
+  //       Row(
+  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //         children: [
+  //           Text(
+  //             "Number of copies:",
+  //             style: TextStyle(
+  //               fontSize: 16,
+  //               color: Colors.grey[600],
+  //             ),
+  //           ),
+  //           Text(
+  //             "Total: ₱${_calculateTotalPrice().toStringAsFixed(2)}",
+  //             style: TextStyle(
+  //               fontSize: 16,
+  //               color: Colors.blue[800],
+  //               fontWeight: FontWeight.bold,
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //       const SizedBox(height: 8),
+  //       Container(
+  //         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+  //         decoration: BoxDecoration(
+  //           border: Border.all(color: Colors.grey[300]!),
+  //           borderRadius: BorderRadius.circular(12),
+  //           color: Colors.grey[50],
+  //         ),
+  //         child: Row(
+  //           mainAxisSize: MainAxisSize.min,
+  //           children: [
+  //             IconButton(
+  //               icon: Icon(Icons.remove, color: Colors.blue[800]),
+  //               onPressed: () {
+  //                 if (_quantity > 1) {
+  //                   setState(() => _quantity--);
+  //                 }
+  //               },
+  //             ),
+  //             const SizedBox(width: 16),
+  //             Text(
+  //               '$_quantity',
+  //               style:
+  //                   const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+  //             ),
+  //             const SizedBox(width: 16),
+  //             IconButton(
+  //               icon: Icon(Icons.add, color: Colors.blue[800]),
+  //               onPressed: () => setState(() => _quantity++),
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //       const SizedBox(height: 24),
+  //       Text(
+  //         "Copy Type:",
+  //         style: TextStyle(
+  //           fontSize: 16,
+  //           color: Colors.grey[600],
+  //         ),
+  //       ),
+  //       const SizedBox(height: 8),
+  //       Container(
+  //         padding: const EdgeInsets.symmetric(horizontal: 16),
+  //         decoration: BoxDecoration(
+  //           border: Border.all(color: Colors.grey[300]!),
+  //           borderRadius: BorderRadius.circular(12),
+  //           color: Colors.grey[50],
+  //         ),
+  //         child: DropdownButtonHideUnderline(
+  //           child: DropdownButton<String>(
+  //             value: _copyType,
+  //             isExpanded: true,
+  //             items: _copyTypes.map((type) {
+  //               return DropdownMenuItem<String>(
+  //                 value: type,
+  //                 child: Text(type),
+  //               );
+  //             }).toList(),
+  //             onChanged: (value) => setState(() => _copyType = value!),
+  //           ),
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
 }
