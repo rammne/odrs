@@ -25,12 +25,20 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
   String? _selectedDocument;
   int _quantity = 1;
   String _otherDocumentText = "";
+  String _otherCertificateText = "";
   String _purposeText = "";
+  String _relationshipToLearner = "";
+  String _selectedRelationship = "";
+  String _otherRelationship = "";
   final TextEditingController _otherController = TextEditingController();
+  final TextEditingController _otherCertificateController =
+      TextEditingController();
   final TextEditingController _purposeController = TextEditingController();
-  String _referenceNumber = ""; // Add this new field
-  final TextEditingController _referenceController =
-      TextEditingController(); // Add this controller
+  final TextEditingController _relationshipController = TextEditingController();
+  final TextEditingController _otherRelationshipController =
+      TextEditingController();
+  String _referenceNumber = "";
+  final TextEditingController _referenceController = TextEditingController();
 
   // Certificate types for dropdown
   final List<String> _certificateTypes = [
@@ -38,7 +46,8 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
     "Certificate of Completion",
     "Certificate of Enrollment",
     "Certificate of Attendance",
-    "Good Moral Certificate"
+    "Good Moral Certificate",
+    "Other"
   ];
   String? _selectedCertificateType;
 
@@ -70,6 +79,14 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
   String _paymentProvider = "GCash";
   final List<String> _paymentProviders = ["GCash", "BDO", "BPI"];
 
+  // Add this list
+  final List<String> _relationshipTypes = [
+    "Parent",
+    "Guardian",
+    "Myself",
+    "Other"
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -79,7 +96,10 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
   @override
   void dispose() {
     _otherController.dispose();
+    _otherCertificateController.dispose();
     _purposeController.dispose();
+    _relationshipController.dispose();
+    _otherRelationshipController.dispose();
     _referenceController.dispose();
     super.dispose();
   }
@@ -148,6 +168,16 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
       return;
     }
 
+    if (_selectedDocument == "Certificate" &&
+        _selectedCertificateType == "Other" &&
+        _otherCertificateText.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text("Please specify the other certificate type")),
+      );
+      return;
+    }
+
     if (_selectedDocument == "Other" && _otherDocumentText.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please specify the document you need")),
@@ -163,6 +193,28 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
       return;
     }
 
+    if (_selectedRelationship.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text("Please select your relationship to the learner")),
+      );
+      return;
+    }
+
+    if (_selectedRelationship == "Other" && _otherRelationship.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please specify your relationship")),
+      );
+      return;
+    }
+
+    if (_relationshipToLearner.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter your full name")),
+      );
+      return;
+    }
+
     if (_referenceNumber.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please enter a reference number")),
@@ -171,7 +223,9 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
     }
 
     String finalDocumentName = _selectedDocument == "Certificate"
-        ? _selectedCertificateType!
+        ? (_selectedCertificateType == "Other"
+            ? _otherCertificateText
+            : _selectedCertificateType!)
         : (_selectedDocument == "Other"
             ? _otherDocumentText
             : _selectedDocument!);
@@ -204,7 +258,11 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
         'copyType': _copyType,
         'referenceNumber': _referenceNumber,
         'paymentProvider': _paymentProvider,
-        'price': _calculateTotalPrice(), // Add this line to store the price
+        'price': _calculateTotalPrice(),
+        'relationshipToLearner': _relationshipToLearner,
+        'relationshipType': _selectedRelationship == "Other"
+            ? _otherRelationship
+            : _selectedRelationship,
       });
 
       // Generate and show receipt
@@ -218,8 +276,8 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
         purpose: _purposeText,
         copyType: _copyType,
         referenceNumber: _referenceNumber,
-        paymentProvider: _paymentProvider, // Add this line
-        price: _calculateTotalPrice(), // Add this line
+        paymentProvider: _paymentProvider,
+        price: _calculateTotalPrice(),
       );
 
       setState(() {
@@ -350,6 +408,126 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                               ),
                             ),
                             onChanged: (value) => _purposeText = value,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildCard(
+                          title: 'Relationship to Learner',
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Note:",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF1565C0),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "Include your full name, Example: Santos, Juan A.",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontStyle: FontStyle.italic,
+                                  color: const Color(0xFF1565C0),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              TextFormField(
+                                controller: _relationshipController,
+                                maxLines: 1,
+                                decoration: InputDecoration(
+                                  hintText: "Enter your full name",
+                                  fillColor: Colors.grey[50],
+                                  filled: true,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide:
+                                        BorderSide(color: Colors.grey[300]!),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide:
+                                        BorderSide(color: Colors.grey[300]!),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                        color: const Color(0xFF1565C0),
+                                        width: 2),
+                                  ),
+                                ),
+                                onChanged: (value) =>
+                                    _relationshipToLearner = value,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                "Select your relationship:",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: const Color(0xFF1565C0),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey[300]!),
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: Colors.grey[50],
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: _selectedRelationship.isEmpty
+                                        ? null
+                                        : _selectedRelationship,
+                                    isExpanded: true,
+                                    hint: const Text("Select relationship"),
+                                    items: _relationshipTypes.map((type) {
+                                      return DropdownMenuItem<String>(
+                                        value: type,
+                                        child: Text(type),
+                                      );
+                                    }).toList(),
+                                    onChanged: (value) => setState(
+                                        () => _selectedRelationship = value!),
+                                  ),
+                                ),
+                              ),
+                              if (_selectedRelationship == "Other") ...[
+                                const SizedBox(height: 16),
+                                TextFormField(
+                                  controller: _otherRelationshipController,
+                                  maxLines: 1,
+                                  decoration: InputDecoration(
+                                    hintText:
+                                        "Please specify your relationship",
+                                    fillColor: Colors.grey[50],
+                                    filled: true,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide:
+                                          BorderSide(color: Colors.grey[300]!),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide:
+                                          BorderSide(color: Colors.grey[300]!),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                          color: const Color(0xFF1565C0),
+                                          width: 2),
+                                    ),
+                                  ),
+                                  onChanged: (value) =>
+                                      _otherRelationship = value,
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -511,14 +689,24 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
       child: RadioListTile<String>(
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(docName),
+            Expanded(
+              child: Text(
+                docName,
+                style: const TextStyle(fontSize: 14),
+                softWrap: true,
+              ),
+            ),
             if (_documentPrices.containsKey(docName))
-              Text(
-                '₱${_documentPrices[docName]?.toStringAsFixed(2)}',
-                style: TextStyle(
-                  color: Colors.blue[800],
-                  fontWeight: FontWeight.bold,
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: Text(
+                  '₱${_documentPrices[docName]?.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    color: Colors.blue[800],
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
           ],
@@ -573,6 +761,28 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
             ),
           ),
         ),
+        if (_selectedCertificateType == "Other")
+          TextFormField(
+            controller: _otherCertificateController,
+            decoration: InputDecoration(
+              hintText: "Enter the other certificate type",
+              fillColor: Colors.grey[50],
+              filled: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.blue[800]!, width: 2),
+              ),
+            ),
+            onChanged: (value) => _otherCertificateText = value,
+          ),
       ],
     );
   }
@@ -690,7 +900,8 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
               const SizedBox(width: 16),
               IconButton(
                 icon: Icon(Icons.add, color: Colors.blue[800]),
-                onPressed: () => setState(() => _quantity++),
+                onPressed:
+                    _quantity >= 3 ? null : () => setState(() => _quantity++),
               ),
             ],
           ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:io';
+import 'login_screen.dart';
 
 class AlumniInfoScreen extends StatefulWidget {
   const AlumniInfoScreen({super.key});
@@ -72,12 +74,29 @@ class _AlumniInfoScreenState extends State<AlumniInfoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+          ),
+          onPressed: () {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => LoginScreen()),
+            );
+          },
+        ),
+        backgroundColor: const Color(0xFF001184),
+        title: const Text(
+          'Alumni Information',
+          style: TextStyle(color: Color(0xFFFFFFFF)),
+        ),
+      ),
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Colors.blue[400]!, Colors.blue[800]!],
+          image: DecorationImage(
+            image: AssetImage('images/olopsc_picture_hehe.jpg'),
+            fit: BoxFit.cover,
           ),
         ),
         child: Center(
@@ -107,7 +126,7 @@ class _AlumniInfoScreenState extends State<AlumniInfoScreen> {
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        color: Colors.blue[800],
+                        color: const Color(0xFF001184),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -160,7 +179,7 @@ class _AlumniInfoScreenState extends State<AlumniInfoScreen> {
                             height: 50,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue[800],
+                                backgroundColor: const Color(0xFF001184),
                                 foregroundColor: Colors.white,
                                 elevation: 2,
                                 shape: RoundedRectangleBorder(

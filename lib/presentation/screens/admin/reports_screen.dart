@@ -9,8 +9,11 @@ class ReportsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('User Reports'),
-        backgroundColor: const Color(0xFF1B9CFF),
+        title: const Text(
+          'User Reports',
+          style: TextStyle(color: Color(0xFFFFFFFF)),
+        ),
+        backgroundColor: const Color(0xFF001184),
         automaticallyImplyLeading: false,
       ),
       body: StreamBuilder<QuerySnapshot>(

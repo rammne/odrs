@@ -16,6 +16,7 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
   final TextEditingController _contactController = TextEditingController();
   final TextEditingController _studentNumberController =
       TextEditingController();
+  final TextEditingController _yearGraduatedController = TextEditingController();
 
   String? _selectedStrand;
   String? _selectedGradeLevel;
@@ -48,7 +49,8 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
     'Grade 9',
     'Grade 10',
     'Grade 11',
-    'Grade 12'
+    'Grade 12',
+    'Alumnus'
   ];
 
   bool get _isStrandRequired =>
@@ -100,6 +102,9 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
         'student_number': studentNumber,
         'grade_level': _selectedGradeLevel,
         'strand': _isStrandRequired ? _selectedStrand : null,
+        'year_graduated': _selectedGradeLevel == 'Alumnus'
+            ? _yearGraduatedController.text.trim()
+            : null,
         'role': 'user',
         'uid': userUid,
         'created_by': adminUid,
@@ -120,6 +125,7 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
       _emailController.clear();
       _contactController.clear();
       _studentNumberController.clear();
+      _yearGraduatedController.clear();
 
       setState(() {
         _selectedGradeLevel = null;
@@ -184,18 +190,18 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
-          prefixIcon: Icon(icon, color: Color(0xFF1B9CFF)),
+          prefixIcon: Icon(icon, color: const Color(0xFFA5A5A5)),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Color(0xFF1B9CFF)),
+            borderSide: BorderSide(color: const Color(0xFF001184)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Color(0xFF1B9CFF)),
+            borderSide: BorderSide(color: const Color(0xFF001184)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Color(0xFF1B9CFF), width: 2),
+            borderSide: BorderSide(color: const Color(0xFF001184), width: 2),
           ),
           filled: true,
           fillColor: Colors.grey[50],
@@ -215,18 +221,18 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
         value: _selectedStrand,
         decoration: InputDecoration(
           labelText: 'Strand',
-          prefixIcon: Icon(Icons.school, color: Color(0xFF1B9CFF)),
+          prefixIcon: Icon(Icons.school, color: const Color(0xFFA5A5A5)),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Color(0xFF1B9CFF)),
+            borderSide: BorderSide(color: const Color(0xFF001184)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Color(0xFF1B9CFF)),
+            borderSide: BorderSide(color: const Color(0xFF001184)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Color(0xFF1B9CFF), width: 2),
+            borderSide: BorderSide(color: const Color(0xFF001184), width: 2),
           ),
           filled: true,
           fillColor: Colors.grey[50],
@@ -255,18 +261,18 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
         value: _selectedGradeLevel,
         decoration: InputDecoration(
           labelText: 'Grade Level',
-          prefixIcon: Icon(Icons.grade, color: Color(0xFF1B9CFF)),
+          prefixIcon: Icon(Icons.grade, color: const Color(0xFFA5A5A5)),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Color(0xFF1B9CFF)),
+            borderSide: BorderSide(color: const Color(0xFF001184)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Color(0xFF1B9CFF)),
+            borderSide: BorderSide(color: const Color(0xFF001184)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Color(0xFF1B9CFF), width: 2),
+            borderSide: BorderSide(color: const Color(0xFF001184), width: 2),
           ),
           filled: true,
           fillColor: Colors.grey[50],
@@ -293,6 +299,16 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
   }
 
   @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _contactController.dispose();
+    _studentNumberController.dispose();
+    _yearGraduatedController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
@@ -304,7 +320,7 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
             color: Colors.white,
           ),
         ),
-        backgroundColor: Color(0xFF1B9CFF),
+        backgroundColor: const Color(0xFF001184),
         elevation: 0,
       ),
       body: SafeArea(
@@ -319,7 +335,7 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
                   Icon(
                     Icons.person_add_rounded,
                     size: 80,
-                    color: Color(0xFF1B9CFF),
+                    color: const Color(0xFFA5A5A5),
                   ),
                   SizedBox(height: 24),
                   Text(
@@ -327,7 +343,7 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF1B9CFF),
+                      color: const Color(0xFFA5A5A5),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -360,6 +376,28 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
                   ),
                   _buildGradeLevelDropdown(),
                   if (_isStrandRequired) _buildStrandDropdown(),
+                  if (_selectedGradeLevel == 'Alumnus')
+                    _buildInputField(
+                      controller: _yearGraduatedController,
+                      label: "Year Graduated",
+                      hint: "Enter year of graduation",
+                      icon: Icons.school,
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Please enter year of graduation";
+                        }
+                        final year = int.tryParse(value);
+                        if (year == null) {
+                          return "Please enter a valid year";
+                        }
+                        final currentYear = DateTime.now().year;
+                        if (year > currentYear || year < 1900) {
+                          return "Please enter a valid graduation year";
+                        }
+                        return null;
+                      },
+                    ),
                   SizedBox(height: 32),
                   SizedBox(
                     height: 50,
@@ -367,7 +405,7 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
                       onPressed: _isLoading ? null : _registerUser,
                       style: ElevatedButton.styleFrom(
                         foregroundColor: Colors.white,
-                        backgroundColor: Color(0xFF1B9CFF),
+                        backgroundColor: const Color(0xFF001184),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),

@@ -305,7 +305,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 Center(
                   child: Container(
                     width: MediaQuery.of(context).size.width * .8,
-                    height: MediaQuery.of(context).size.height * .78,
+                    height: MediaQuery.of(context).size.height * .9,
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -398,6 +398,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           Center(
                             child: Image(
                               image: AssetImage('images/olopsccover.png'),
+                              width: 900,
                             ),
                           ),
                           SizedBox(

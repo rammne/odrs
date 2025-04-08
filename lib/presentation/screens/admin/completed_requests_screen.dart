@@ -22,8 +22,20 @@ class _CompletedRequestsScreenState extends State<CompletedRequestsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Completed Requests'),
-        backgroundColor: Color(0xFF1B9CFF),
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+          ),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+        title: const Text(
+          'Completed Requests',
+          style: TextStyle(color: Color(0xFFFFFFFF)),
+        ),
+        backgroundColor: const Color(0xFF001184),
       ),
       body: Column(
         children: [
