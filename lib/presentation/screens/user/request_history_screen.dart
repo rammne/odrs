@@ -138,6 +138,8 @@ class RequestHistoryScreen extends StatelessWidget {
                                     'Student Number: ${requestData['studentNumber'] ?? 'N/A'}'),
                                 Text(
                                     'Contact: ${requestData['contact'] ?? 'N/A'}'),
+                                if (requestData['sf10OfficialInfo'] != null)
+                                  Text('Requesting School: ${requestData['sf10OfficialInfo']}'),
                                 Text('Document Requested:\n$documentsList'),
                                 if (requestData['principalSignatory'] != null || requestData['guidanceCounselorSignatory'] != null)
                                   Text('Signatories: ${_getSignatoriesText(requestData)}'),

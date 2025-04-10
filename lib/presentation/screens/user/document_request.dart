@@ -56,21 +56,24 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
   final Map<String, double> _documentPrices = {
     "SF10 (F137) For Evaluation": 115.0,
     "SF10 (F137) Official": 115.0,
-    "Certificate": 65.0,
     "ESC Certification": 65.0,
-    "Diploma": 150.0,
-    "Assessment of School Fees": 65.0
+    "Report Card": 25.0,
+    "Certificate of Ranking for Grade 12 batch wide": 65.0,
+    "Certificate of Ranking for Grade 12 strand wide": 65.0,
+    "Assessment of School Fees": 65.0,
+    "Other Certificates": 65.0,
   };
 
   // Main document categories
   final List<String> _documentCategories = [
     "SF10 (F137) For Evaluation",
     "SF10 (F137) Official",
-    "Certificate",
     "ESC Certification",
-    "Diploma",
+    "Report Card",
+    "Certificate of Ranking for Grade 12 batch wide",
+    "Certificate of Ranking for Grade 12 strand wide",
     "Assessment of School Fees",
-    "Other"
+    "Other Certificates",
   ];
 
   String _copyType = "Hard Copy";
@@ -86,7 +89,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
 
   // Relationship to learner options
   String _relationship = "Myself";
-  final List<String> _relationshipTypes = ["Parent", "Guardian", "Myself", "Other"];
+  final List<String> _relationshipTypes = ["Myself","Mother", "Father", "Grandmother", "Grandfather", "Aunt", "Uncle", "Other"];
   String _otherRelationship = "";
   final TextEditingController _otherRelationshipController = TextEditingController();
 
@@ -120,7 +123,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
         if (userDoc.exists) {
           final data = userDoc.data() as Map<String, dynamic>;
           setState(() {
-            // Handle both regular and guest users
+            // Handle both regular and alumni users
             name = data['name'] ??
                 '${data['firstName']} ${data['lastName']}'.trim();
             studentNumber = data['student_number'] ?? 'N/A (Alumni)';
@@ -236,8 +239,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
       final String requestId = generateRequestId();
 
       // Add the document request
-      DocumentReference docRef =
-          await _firestore.collection('document_requests').add({
+      await _firestore.collection('document_requests').add({
         'requestId': requestId,
         'userId': _auth.currentUser?.uid,
         'name': name,
@@ -374,7 +376,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                               ..._documentCategories
                                   .map((doc) => _buildDocumentRadio(doc))
                                   .toList(),
-                              if (_selectedDocument == "Certificate")
+                              if (_selectedDocument == "Other Certificates")
                                 _buildCertificateDropdown(),
                               if (_selectedDocument == "Other")
                                 _buildOtherDocumentField(),
@@ -972,6 +974,27 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
               color: _quantity >= 3 ? Colors.grey : Colors.blue[800],
             ),
           ],
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.grey[50],
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: _copyType,
+              isExpanded: true,
+              items: _copyTypes.map((type) {
+                return DropdownMenuItem<String>(
+                  value: type,
+                  child: Text(type),
+                );
+              }).toList(),
+              onChanged: (value) => setState(() => _copyType = value!),
+            ),
+          ),
         ),
       ],
     );

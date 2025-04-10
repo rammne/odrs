@@ -90,6 +90,7 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
         },
       );
 
+
       if (confirm != true) return;
     }
 
@@ -462,6 +463,8 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
                             _infoRow(
                                 'Student No.:', data['studentNumber'] ?? ''),
                             _infoRow('Contact:', data['contact'] ?? ''),
+                            if (data['sf10OfficialInfo'] != null)
+                              _infoRow('Requesting School:', data['sf10OfficialInfo']), //ram
                             _documentInfo(data),
                             _purposeInfo(data),
                             _relationshipInfo(data),
@@ -611,7 +614,7 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
     final List<String> statusOptions = [
       'Pending',
       'Processing',
-      'Ready for Pickup',
+      'Ready to Claim',
       'Completed',
       'Cancelled'
     ];

@@ -33,7 +33,8 @@ class HelpScreen extends StatelessWidget {
                 'Fill in all required information',
                 'Submit your request and note down your Request ID',
                 'For documents to be claimed through delivery, kindly inform the respective registrar through email, call, or message about the information of rider when the document is ready to be retrieved',
-                'Document copies are limited to 3'
+                'Document copies are limited to 3',
+                'Users can only request one document per request, although multiple copies are still allowed',
               ],
             ),
             const SizedBox(height: 24),
@@ -56,9 +57,8 @@ class HelpScreen extends StatelessWidget {
                 'Include your reference number in the email with your full name and student number',
                 'Submit your request and note down your reference number',
                 'Send proof of payment to pscashier@olopsc.edu.ph for Pre-School',
-                'Send proof of payment to gs@olopsc.edu.ph for Grade School',
-                'Send proof of payment to jhs@olopsc.edu.ph for Junior High School',
-                'Send proof of payment to shs@olopsc.edu.ph for Senior High School',
+                'Send proof of payment to gscashier@olopsc.edu.ph for Grade School',
+                'Send proof of payment to hscashier@olopsc.edu.ph for High School',
               ],
             ),
             const SizedBox(height: 24),
@@ -74,22 +74,22 @@ class HelpScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             _buildSection(
+              'System Information',
+              [
+                'Accounts are created by the administrators, kindly inform the registrar if a student is not registered',
+                'Alumni accounts cannot be logged in once logged out. Please save your receipt and take note of your Request ID',
+                'Keep copies of all submitted documents for your records',
+                
+                
+              ],
+            ),
+            const SizedBox(height: 24),
+            _buildSection(
               'Contact and Schedule Information',
               [
                 'For more inquiries, please call 0969-563-0970(For Nursery to JHS)',
                 'For more inquiries, please call 0998-595-7592(For SHS)',
                 'Registrar Office Hours: 7:30 AM - 4:30 PM',
-              ],
-            ),
-            const SizedBox(height: 24),
-            _buildSection(
-              'System Information',
-              [
-                'Accounts are created by the administrators, kindly inform the registrar if a student is not registered',
-                'Alumni accounts are automatically deleted once logged out. Please save your receipt and take note of your Request ID',
-                'Keep copies of all submitted documents for your records',
-                'Users can only request one document per request, although multiple copies are still allowed',
-                
               ],
             ),
           ],

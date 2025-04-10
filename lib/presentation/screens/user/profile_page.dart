@@ -45,7 +45,7 @@ class ProfilePage extends StatelessWidget {
                             backgroundColor:
                                 const Color(0xFF001184).withOpacity(0.1),
                             child: Text(
-                              profile.name[0].toUpperCase(),
+                              (profile.name.isNotEmpty ? profile.name[0] : '?').toUpperCase(),
                               style: const TextStyle(
                                 fontSize: 36,
                                 fontWeight: FontWeight.bold,

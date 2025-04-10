@@ -19,6 +19,31 @@ class _AlumniInfoScreenState extends State<AlumniInfoScreen> {
   final TextEditingController _contactController = TextEditingController();
   bool _isSaving = false;
 
+  Future<String> _generateAlumniNumber() async {
+    // Get all alumni users ordered by their student number
+    final QuerySnapshot alumniSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .where('role', isEqualTo: 'alumni')
+        .orderBy('student_number', descending: true)
+        .limit(1)
+        .get();
+
+    int nextNumber = 1; // Default start number
+
+    if (alumniSnapshot.docs.isNotEmpty) {
+      // Get the last student number
+      final String lastNumber = alumniSnapshot.docs.first.get('student_number') as String;
+      if (lastNumber.startsWith('Alumni')) {
+        // Extract the number part and increment
+        final int currentNumber = int.parse(lastNumber.substring(6));
+        nextNumber = currentNumber + 1;
+      }
+    }
+
+    // Format the number with leading zeros
+    return 'Alumni${nextNumber.toString().padLeft(4, '0')}';
+  }
+
   Future<void> _saveInfo() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -31,6 +56,10 @@ class _AlumniInfoScreenState extends State<AlumniInfoScreen> {
         return;
       }
 
+      // Generate unique alumni number
+      final String alumniNumber = await _generateAlumniNumber();
+      
+      // Create new user profile
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
         'firstName': _firstNameController.text.trim(),
         'lastName': _lastNameController.text.trim(),
@@ -39,6 +68,7 @@ class _AlumniInfoScreenState extends State<AlumniInfoScreen> {
         'yearGraduated': _yearController.text.trim(),
         'contact': _contactController.text.trim(), // Add contact
         'role': 'alumni',
+        'student_number': alumniNumber,
         'email':
             '${_firstNameController.text.trim()}.${_lastNameController.text.trim()}@alumni',
       });
@@ -48,6 +78,7 @@ class _AlumniInfoScreenState extends State<AlumniInfoScreen> {
       }
     } catch (e) {
       _showSnackbar('Failed to save information');
+      print(e);
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);
