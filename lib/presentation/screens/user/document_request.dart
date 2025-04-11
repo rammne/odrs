@@ -21,7 +21,6 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
   bool isLoading = true;
   String errorMessage = "";
 
-
   // Document Request Data
   String? _selectedDocument;
   int _quantity = 1;
@@ -47,7 +46,8 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
     "Other"
   ];
   String _otherCertificateText = "";
-  final TextEditingController _otherCertificateController = TextEditingController();
+  final TextEditingController _otherCertificateController =
+      TextEditingController();
   String? _selectedCertificateType;
   bool _principalSignatory = false;
   bool _guidanceCounselorSignatory = false;
@@ -89,15 +89,32 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
 
   // Relationship to learner options
   String _relationship = "Myself";
-  final List<String> _relationshipTypes = ["Myself","Mother", "Father", "Grandmother", "Grandfather", "Aunt", "Uncle", "Other"];
+  final List<String> _relationshipTypes = [
+    "Myself",
+    "Mother",
+    "Father",
+    "Grandmother",
+    "Grandfather",
+    "Aunt",
+    "Uncle",
+    "Other"
+  ];
   String _otherRelationship = "";
-  final TextEditingController _otherRelationshipController = TextEditingController();
+  final TextEditingController _otherRelationshipController =
+      TextEditingController();
+
+  // Add new fields for first and last name
+  String _requesterFirstName = "";
+  String _requesterLastName = "";
+  final TextEditingController _requesterFirstNameController =
+      TextEditingController();
+  final TextEditingController _requesterLastNameController =
+      TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _fetchUserData();
-
   }
 
   @override
@@ -108,10 +125,11 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
     _sf10OfficialController.dispose();
     _otherCertificateController.dispose();
     _otherRelationshipController.dispose();
+    // Dispose new controllers
+    _requesterFirstNameController.dispose();
+    _requesterLastNameController.dispose();
     super.dispose();
   }
-
-
 
   Future<void> _fetchUserData() async {
     try {
@@ -183,7 +201,8 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
         !_guidanceCounselorSignatory) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text("Please select at least one signatory for Good Moral Certificate")),
+            content: Text(
+                "Please select at least one signatory for Good Moral Certificate")),
       );
       return;
     }
@@ -212,12 +231,14 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
 
     if (_relationship == "Other" && _otherRelationship.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please specify your relationship to the learner")),
+        const SnackBar(
+            content: Text("Please specify your relationship to the learner")),
       );
       return;
     }
 
-    if (_selectedDocument == "SF10 (F137) Official" && _sf10OfficialText.trim().isEmpty) {
+    if (_selectedDocument == "SF10 (F137) Official" &&
+        _sf10OfficialText.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please enter the requesting school")),
       );
@@ -225,7 +246,9 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
     }
 
     String finalDocumentName = _selectedDocument == "Certificate"
-        ? (_selectedCertificateType == "Other" ? _otherCertificateText : _selectedCertificateType!)
+        ? (_selectedCertificateType == "Other"
+            ? _otherCertificateText
+            : _selectedCertificateType!)
         : (_selectedDocument == "Other"
             ? _otherDocumentText
             : _selectedDocument!);
@@ -259,30 +282,46 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
         'referenceNumber': _referenceNumber,
         'paymentProvider': _paymentProvider,
         'price': _calculateTotalPrice(), // Add this line to store the price
-        'principalSignatory': _selectedCertificateType == "Good Moral Certificate" ? _principalSignatory : null,
-        'guidanceCounselorSignatory': _selectedCertificateType == "Good Moral Certificate" ? _guidanceCounselorSignatory : null,
-        'sf10OfficialInfo': _selectedDocument == "SF10 (F137) Official" ? _sf10OfficialText : null,
-        'relationship': _relationship == "Other" ? _otherRelationship : _relationship
+        'principalSignatory':
+            _selectedCertificateType == "Good Moral Certificate"
+                ? _principalSignatory
+                : null,
+        'guidanceCounselorSignatory':
+            _selectedCertificateType == "Good Moral Certificate"
+                ? _guidanceCounselorSignatory
+                : null,
+        'sf10OfficialInfo': _selectedDocument == "SF10 (F137) Official"
+            ? _sf10OfficialText
+            : null,
+        'relationship':
+            _relationship == "Other" ? _otherRelationship : _relationship
       });
 
       // Generate and show receipt
       await RequestReceiptGenerator.generateReceipt(
-        requestId: requestId,
-        name: name,
-        studentNumber: studentNumber,
-        contact: contact,
-        documents: {finalDocumentName: _quantity},
-        requestDate: DateTime.now(),
-        purpose: _purposeText,
-        copyType: _copyType,
-        referenceNumber: _referenceNumber,
-        paymentProvider: _paymentProvider,
-        price: _calculateTotalPrice(),
-        claimingMethod: _claimingMethod,
-        requestingSchool: _selectedDocument == "SF10 (F137) Official" ? _sf10OfficialText : null,
-        principalSignatory: _selectedDocument == "Certificate" && _selectedCertificateType == "Good Moral Certificate" ? _principalSignatory : null,
-        guidanceCounselorSignatory: _selectedDocument == "Certificate" && _selectedCertificateType == "Good Moral Certificate" ? _guidanceCounselorSignatory : null
-      );
+          requestId: requestId,
+          name: name,
+          studentNumber: studentNumber,
+          contact: contact,
+          documents: {finalDocumentName: _quantity},
+          requestDate: DateTime.now(),
+          purpose: _purposeText,
+          copyType: _copyType,
+          referenceNumber: _referenceNumber,
+          paymentProvider: _paymentProvider,
+          price: _calculateTotalPrice(),
+          claimingMethod: _claimingMethod,
+          requestingSchool: _selectedDocument == "SF10 (F137) Official"
+              ? _sf10OfficialText
+              : null,
+          principalSignatory: _selectedDocument == "Certificate" &&
+                  _selectedCertificateType == "Good Moral Certificate"
+              ? _principalSignatory
+              : null,
+          guidanceCounselorSignatory: _selectedDocument == "Certificate" &&
+                  _selectedCertificateType == "Good Moral Certificate"
+              ? _guidanceCounselorSignatory
+              : null);
 
       setState(() {
         isLoading = false;
@@ -407,27 +446,42 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                                     TextFormField(
                                       controller: _sf10OfficialController,
                                       decoration: InputDecoration(
-                                        hintText: "Enter the name of requesting school",
+                                        hintText:
+                                            "Enter the name of requesting school",
                                         fillColor: Colors.grey[50],
                                         filled: true,
-                                        errorText: _sf10OfficialText.trim().isEmpty ? "Required" : null,
-                                        helperText: "Note: Present/Submit an official letter from the requesting school upon claiming the document.",
+                                        errorText:
+                                            _sf10OfficialText.trim().isEmpty
+                                                ? "Required"
+                                                : null,
+                                        helperText:
+                                            "Note: Present/Submit an official letter from the requesting school upon claiming the document.",
                                         helperMaxLines: 2,
-                                        helperStyle: TextStyle(color: const Color.fromARGB(255, 8, 8, 8)),
+                                        helperStyle: TextStyle(
+                                            color: const Color.fromARGB(
+                                                255, 8, 8, 8)),
                                         border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
-                                          borderSide: BorderSide(color: Colors.grey[300]!),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          borderSide: BorderSide(
+                                              color: Colors.grey[300]!),
                                         ),
                                         enabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
-                                          borderSide: BorderSide(color: Colors.grey[300]!),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          borderSide: BorderSide(
+                                              color: Colors.grey[300]!),
                                         ),
                                         focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
-                                          borderSide: BorderSide(color: Colors.blue[800]!, width: 2),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          borderSide: BorderSide(
+                                              color: Colors.blue[800]!,
+                                              width: 2),
                                         ),
                                       ),
-                                      onChanged: (value) => setState(() => _sf10OfficialText = value),
+                                      onChanged: (value) => setState(
+                                          () => _sf10OfficialText = value),
                                     ),
                                   ],
                                 ),
@@ -466,83 +520,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        _buildCard(
-                          title: 'Relationship to Learner',
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Select your relationship:",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              ...List.generate(_relationshipTypes.length, (index) {
-                                final type = _relationshipTypes[index];
-                                return Container(
-                                  margin: const EdgeInsets.only(bottom: 8),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: _relationship == type
-                                          ? Colors.blue[800]!
-                                          : Colors.grey[300]!,
-                                    ),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: RadioListTile<String>(
-                                    title: Text(type),
-                                    value: type,
-                                    groupValue: _relationship,
-                                    onChanged: (value) => setState(() {
-                                      _relationship = value!;
-                                      if (value != "Other") {
-                                        _otherRelationship = "";
-                                        _otherRelationshipController.clear();
-                                      }
-                                    }),
-                                    activeColor: Colors.blue[800],
-                                    contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 4),
-                                  ),
-                                );
-                              }),
-                              if (_relationship == "Other") ...[  
-                                const SizedBox(height: 16),
-                                Text(
-                                  "Specify your relationship:",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                TextFormField(
-                                  controller: _otherRelationshipController,
-                                  decoration: InputDecoration(
-                                    hintText: "Enter your relationship to the learner",
-                                    fillColor: Colors.grey[50],
-                                    filled: true,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: Colors.grey[300]!),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: Colors.grey[300]!),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: Colors.blue[800]!, width: 2),
-                                    ),
-                                  ),
-                                  onChanged: (value) => setState(() => _otherRelationship = value),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
+                        _buildRelationshipSection(),
                         const SizedBox(height: 16),
                         _buildCard(
                           title: 'Payment Provider',
@@ -572,7 +550,8 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                               Text(
                                   'Note: Send a proof of payment together with your name and student number as the email subject to pscashier@olopsc.edu.ph (Pre-School), gscashier@olopsc.edu.ph (Grade School), hscashier@olopsc.edu.ph (High School)',
                                   style: TextStyle(
-                                    color: const Color.fromARGB(255, 10, 10, 10),
+                                    color:
+                                        const Color.fromARGB(255, 10, 10, 10),
                                     fontStyle: FontStyle.italic,
                                   )),
                               const SizedBox(height: 8),
@@ -647,7 +626,8 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                               ),
                               const SizedBox(height: 8),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
                                 decoration: BoxDecoration(
                                   border: Border.all(color: Colors.grey[300]!),
                                   borderRadius: BorderRadius.circular(12),
@@ -660,7 +640,8 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                                     items: _claimingMethods.map((method) {
                                       return DropdownMenuItem<String>(
                                         value: method,
-                                        child: Text(method[0].toUpperCase() + method.substring(1)),
+                                        child: Text(method[0].toUpperCase() +
+                                            method.substring(1)),
                                       );
                                     }).toList(),
                                     onChanged: (value) => setState(
@@ -670,9 +651,9 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                _claimingMethod == "Delivery" 
-                                  ? "Note: Requesting party will do the booking and shoulder the shipping fee"
-                                  : "Note: If representative, please bring an authorization letter and a photocopy of valid ID",
+                                _claimingMethod == "Delivery"
+                                    ? "Note: Requesting party will do the booking and shoulder the shipping fee"
+                                    : "Note: If representative, please bring an authorization letter and a photocopy of valid ID",
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Colors.grey[600],
@@ -824,7 +805,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
               onChanged: (value) => setState(() {
                 _selectedCertificateType = value;
                 if (value == "Good Moral Certificate") {
-                  _principalSignatory = true;  // Set default selection
+                  _principalSignatory = true; // Set default selection
                   _guidanceCounselorSignatory = false;
                 } else {
                   _principalSignatory = false;
@@ -838,7 +819,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
             ),
           ),
         ),
-        if (_selectedCertificateType == "Other") ...[  
+        if (_selectedCertificateType == "Other") ...[
           const SizedBox(height: 16),
           Text(
             "Specify the certificate type:",
@@ -870,7 +851,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
             onChanged: (value) => setState(() => _otherCertificateText = value),
           ),
         ],
-        if (_selectedCertificateType == "Good Moral Certificate") ...[  
+        if (_selectedCertificateType == "Good Moral Certificate") ...[
           const SizedBox(height: 16),
           CheckboxListTile(
             title: const Text("Principal Signatory"),
@@ -1022,95 +1003,141 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
     );
   }
 
-  // Widget _buildQuantitySelector() {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       const SizedBox(height: 24),
-  //       Row(
-  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //         children: [
-  //           Text(
-  //             "Number of copies:",
-  //             style: TextStyle(
-  //               fontSize: 16,
-  //               color: Colors.grey[600],
-  //             ),
-  //           ),
-  //           Text(
-  //             "Total: ₱${_calculateTotalPrice().toStringAsFixed(2)}",
-  //             style: TextStyle(
-  //               fontSize: 16,
-  //               color: Colors.blue[800],
-  //               fontWeight: FontWeight.bold,
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //       const SizedBox(height: 8),
-  //       Container(
-  //         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-  //         decoration: BoxDecoration(
-  //           border: Border.all(color: Colors.grey[300]!),
-  //           borderRadius: BorderRadius.circular(12),
-  //           color: Colors.grey[50],
-  //         ),
-  //         child: Row(
-  //           mainAxisSize: MainAxisSize.min,
-  //           children: [
-  //             IconButton(
-  //               icon: Icon(Icons.remove, color: Colors.blue[800]),
-  //               onPressed: () {
-  //                 if (_quantity > 1) {
-  //                   setState(() => _quantity--);
-  //                 }
-  //               },
-  //             ),
-  //             const SizedBox(width: 16),
-  //             Text(
-  //               '$_quantity',
-  //               style:
-  //                   const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-  //             ),
-  //             const SizedBox(width: 16),
-  //             IconButton(
-  //               icon: Icon(Icons.add, color: Colors.blue[800]),
-  //               onPressed: () => setState(() => _quantity++),
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //       const SizedBox(height: 24),
-  //       Text(
-  //         "Copy Type:",
-  //         style: TextStyle(
-  //           fontSize: 16,
-  //           color: Colors.grey[600],
-  //         ),
-  //       ),
-  //       const SizedBox(height: 8),
-  //       Container(
-  //         padding: const EdgeInsets.symmetric(horizontal: 16),
-  //         decoration: BoxDecoration(
-  //           border: Border.all(color: Colors.grey[300]!),
-  //           borderRadius: BorderRadius.circular(12),
-  //           color: Colors.grey[50],
-  //         ),
-  //         child: DropdownButtonHideUnderline(
-  //           child: DropdownButton<String>(
-  //             value: _copyType,
-  //             isExpanded: true,
-  //             items: _copyTypes.map((type) {
-  //               return DropdownMenuItem<String>(
-  //                 value: type,
-  //                 child: Text(type),
-  //               );
-  //             }).toList(),
-  //             onChanged: (value) => setState(() => _copyType = value!),
-  //           ),
-  //         ),
-  //       ),
-  //     ],
-  //   );
-  // }
+  Widget _buildRelationshipSection() {
+    return _buildCard(
+      title: 'Relationship to Learner',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "First Name:",
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _requesterFirstNameController,
+            decoration: InputDecoration(
+              hintText: "Enter first name",
+              fillColor: Colors.grey[50],
+              filled: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.blue[800]!, width: 2),
+              ),
+            ),
+            onChanged: (value) => setState(() => _requesterFirstName = value),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            "Last Name:",
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _requesterLastNameController,
+            decoration: InputDecoration(
+              hintText: "Enter last name",
+              fillColor: Colors.grey[50],
+              filled: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.blue[800]!, width: 2),
+              ),
+            ),
+            onChanged: (value) => setState(() => _requesterLastName = value),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            "Select your relationship:",
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey[300]!),
+              borderRadius: BorderRadius.circular(12),
+              color: Colors.grey[50],
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: _relationship,
+                isExpanded: true,
+                items: _relationshipTypes.map((type) {
+                  return DropdownMenuItem<String>(
+                    value: type,
+                    child: Text(type),
+                  );
+                }).toList(),
+                onChanged: (value) => setState(() {
+                  _relationship = value!;
+                  if (value != "Other") {
+                    _otherRelationship = "";
+                    _otherRelationshipController.clear();
+                  }
+                }),
+              ),
+            ),
+          ),
+          if (_relationship == "Other") ...[
+            const SizedBox(height: 16),
+            Text(
+              "Specify your relationship:",
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _otherRelationshipController,
+              decoration: InputDecoration(
+                hintText: "Enter your relationship to the learner",
+                fillColor: Colors.grey[50],
+                filled: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.blue[800]!, width: 2),
+                ),
+              ),
+              onChanged: (value) => setState(() => _otherRelationship = value),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 }
