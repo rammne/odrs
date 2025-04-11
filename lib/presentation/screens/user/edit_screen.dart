@@ -25,7 +25,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String? _lastName;
   String? _yearGraduated;
   bool _isSaving = false;
-
+  DateTime? _lastStrandEditTime;
 
   @override
   void initState() {
@@ -37,16 +37,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _firstName = widget.profile.firstName;
     _lastName = widget.profile.lastName;
     _yearGraduated = widget.profile.yearGraduated;
-
+    _lastStrandEditTime = widget.profile.lastCourseEditDate;
   }
 
-
+  bool _canEditStrand() {
+    if (_lastStrandEditTime == null) return true;
+    return DateTime.now().difference(_lastStrandEditTime!).inMinutes >= 1;
+  }
 
   Future<void> _saveProfile() async {
     if (!mounted) return;
     if (!(_formKey.currentState?.validate() ?? false)) return;
-
-
 
     setState(() => _isSaving = true);
 
@@ -65,14 +66,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         strand: _course,
         role: widget.profile.role,
         yearGraduated: _yearGraduated,
-        lastCourseEditDate: _course != widget.profile.strand ? DateTime.now() : widget.profile.lastCourseEditDate,
+        lastCourseEditDate: _course != widget.profile.strand
+            ? DateTime.now()
+            : widget.profile.lastCourseEditDate,
       );
 
       await widget.userRepository.updateUserProfile(updatedProfile);
 
       if (!mounted) return;
-
-
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Profile updated successfully')),
@@ -245,15 +246,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
         const SizedBox(height: 16),
         TextFormField(
-          readOnly: true,
+          readOnly: !_canEditStrand(),
           initialValue: _course,
-          decoration: const InputDecoration(
-            labelText: 'Course',
+          decoration: InputDecoration(
+            labelText: 'Strand',
             border: OutlineInputBorder(),
+            helperText: _canEditStrand()
+                ? null
+                : 'You can edit this field again in 1 minute.',
           ),
           onSaved: (value) => _course = value?.trim() ?? "",
           validator: (value) =>
-              value == null || value.isEmpty ? 'Enter course' : null,
+              value == null || value.isEmpty ? 'Enter strand' : null,
         ),
       ],
     );

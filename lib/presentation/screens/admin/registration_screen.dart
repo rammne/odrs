@@ -16,7 +16,8 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
   final TextEditingController _contactController = TextEditingController();
   final TextEditingController _studentNumberController =
       TextEditingController();
-  final TextEditingController _yearGraduatedController = TextEditingController();
+  final TextEditingController _yearGraduatedController =
+      TextEditingController();
 
   String? _selectedStrand;
   String? _selectedGradeLevel;
@@ -111,7 +112,6 @@ class _AdminRegisterUserScreenState extends State<AdminRegisterUserScreen> {
       });
 
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-      await FirebaseAuth.instance.signOut();
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
