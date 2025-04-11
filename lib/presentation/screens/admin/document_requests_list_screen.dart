@@ -442,29 +442,21 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
                               ),
                             ),
                             const SizedBox(height: 16),
-                            _infoRow('Status:', data['status'] ?? ''),
-                            _infoRow(
-                              'Date Requested:',
-                              data['dateRequested']
-                                      ?.toDate()
-                                      ?.toString()
-                                      .split('.')[0] ??
-                                  '',
+                            ListTile(
+                              title: Text('Request by ${data['name'] ?? 'Unknown'}'),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('First Name: ${data['firstName'] ?? 'N/A'}'),
+                                  Text('Last Name: ${data['lastName'] ?? 'N/A'}'),
+                                  Text('Relationship: ${data['relationship'] ?? 'N/A'}'),
+                                  Text('Student Number: ${data['studentNumber'] ?? 'N/A'}'),
+                                  Text('Contact: ${data['contact'] ?? 'N/A'}'),
+                                  if (data['sf10OfficialInfo'] != null)
+                                    Text('Requesting School: ${data['sf10OfficialInfo']}'),
+                                ],
+                              ),
                             ),
-                            _infoRow(
-                              'Last Updated:',
-                              data['lastUpdated']
-                                      ?.toDate()
-                                      ?.toString()
-                                      .split('.')[0] ??
-                                  '',
-                            ),
-                            _infoRow('Name:', data['name'] ?? ''),
-                            _infoRow(
-                                'Student No.:', data['studentNumber'] ?? ''),
-                            _infoRow('Contact:', data['contact'] ?? ''),
-                            if (data['sf10OfficialInfo'] != null)
-                              _infoRow('Requesting School:', data['sf10OfficialInfo']), //ram
                             _documentInfo(data),
                             _purposeInfo(data),
                             _relationshipInfo(data),
@@ -508,7 +500,7 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
         case 'Processing':
           textColor = Colors.green;
           break;
-        case 'Ready for Pickup':
+        case 'Ready to Claim':
           textColor = Colors.amber[700];
           break;
         case 'Completed':

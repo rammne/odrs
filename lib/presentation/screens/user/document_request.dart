@@ -245,6 +245,13 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
       return;
     }
 
+    if (_relationship != "Myself" && (_requesterFirstName.trim().isEmpty || _requesterLastName.trim().isEmpty)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter both first and last name")),
+      );
+      return;
+    }
+
     String finalDocumentName = _selectedDocument == "Certificate"
         ? (_selectedCertificateType == "Other"
             ? _otherCertificateText
@@ -281,6 +288,9 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
         'copyType': _copyType,
         'referenceNumber': _referenceNumber,
         'paymentProvider': _paymentProvider,
+        'firstName': _relationship != 'Myself' ? _requesterFirstName : null,
+        'lastName': _relationship != 'Myself' ? _requesterLastName : null,
+        'relationship': _relationship == 'Other' ? _otherRelationship : _relationship,
         'price': _calculateTotalPrice(), // Add this line to store the price
         'principalSignatory':
             _selectedCertificateType == "Good Moral Certificate"
@@ -387,6 +397,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                         const SizedBox(height: 48),
                         _buildCard(
                           title: 'Personal Information',
+          titleColor: Color(0xFF001184),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -401,6 +412,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                         const SizedBox(height: 24),
                         _buildCard(
                           title: 'Document Selection',
+          titleColor: Color(0xFF001184),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -493,6 +505,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                         const SizedBox(height: 24),
                         _buildCard(
                           title: 'Purpose of Request',
+          titleColor: Color(0xFF001184),
                           child: TextFormField(
                             controller: _purposeController,
                             maxLines: 3,
@@ -524,28 +537,29 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                         const SizedBox(height: 16),
                         _buildCard(
                           title: 'Payment Provider',
+          titleColor: Color(0xFF001184),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
                               Text(
-                                "Select payment provider:",
+                                "Payment Provider:",
                                 style: TextStyle(
                                   fontSize: 16,
-                                  color: Colors.blue[800]!,
+                                  color: const Color(0xFF001184),
                                 ),
                               ),
                               const SizedBox(height: 8),
                               const SizedBox(height: 8),
                               Text('GCash: 0917 822 7532, Jerry S. Hernandez',
-                                  style: TextStyle(color: Colors.blue[800]!)),
+                                  style: TextStyle(color: const Color(0xFF001184),)),
                               const SizedBox(height: 8),
                               Text(
                                   'BDO - Concepcion Branch - SAVINGS ACCT, Account Number: 006 518 013 093',
-                                  style: TextStyle(color: Colors.blue[800]!)),
+                                  style: TextStyle(color: const Color(0xFF001184),)),
                               const SizedBox(height: 8),
                               Text(
                                   'BPI - Concepcion Branch - SAVINGS ACCT, Account Number: 612 106 477 2',
-                                  style: TextStyle(color: Colors.blue[800]!)),
+                                  style: TextStyle(color: const Color(0xFF001184),)),
                               const SizedBox(height: 16),
                               Text(
                                   'Note: Send a proof of payment together with your name and student number as the email subject to pscashier@olopsc.edu.ph (Pre-School), gscashier@olopsc.edu.ph (Grade School), hscashier@olopsc.edu.ph (High School)',
@@ -584,6 +598,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                         const SizedBox(height: 24),
                         _buildCard(
                           title: 'Reference Number',
+          titleColor: Color(0xFF001184),
                           child: TextFormField(
                             controller: _referenceController,
                             decoration: InputDecoration(
@@ -614,6 +629,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                         const SizedBox(height: 24),
                         _buildCard(
                           title: 'Claiming Method',
+          titleColor: Color(0xFF001184),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
@@ -693,7 +709,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
     );
   }
 
-  Widget _buildCard({required String title, required Widget child}) {
+  Widget _buildCard({required String title, required Widget child, Color? titleColor}) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -716,7 +732,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Colors.blue[800],
+              color: const Color(0xFF001184),
             ),
           ),
           const SizedBox(height: 20),
@@ -751,7 +767,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
               Text(
                 '₱${_documentPrices[docName]?.toStringAsFixed(2)}',
                 style: TextStyle(
-                  color: Colors.blue[800],
+                  color: const Color(0xFF001184),
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -938,7 +954,7 @@ class _DocumentRequestScreenState extends State<DocumentRequestScreen> {
                 if (_quantity > 1) _quantity--;
               }),
               icon: const Icon(Icons.remove_circle_outline),
-              color: Colors.blue[800],
+              color: const Color(0xFF001184),
             ),
             Text(
               _quantity.toString(),

@@ -83,7 +83,7 @@ class RequestReceiptGenerator {
               pw.Text(
                   'Please present a copy (soft copy or hard copy) of this receipt when claiming your documents.'),
               if (documents.containsKey('Report Card'))
-                pw.Text('Note: Processing may take 3 working days.')
+                pw.Text('Note: Processing may take 3-5 working days.')
               else
                 pw.Text('Note: Processing may take 14 working days.')
             ],
@@ -181,7 +181,10 @@ class RequestReceiptGenerator {
               pw.SizedBox(height: 40),
               pw.Text(
                   'Please present a copy (soft copy or hard copy) of this receipt when claiming your documents.'),
-              pw.Text('Note: Processing may take 3-5 working days.'),
+              if (documents.containsKey('Report Card'))
+                pw.Text('Note: Processing may take 3-5 working days.')
+              else
+                pw.Text('Note: Processing may take 14 working days.')
             ],
           );
         },

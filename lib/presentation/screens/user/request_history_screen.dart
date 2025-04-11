@@ -134,6 +134,9 @@ class RequestHistoryScreen extends StatelessWidget {
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                Text('First Name: ${requestData['firstName'] ?? 'N/A'}'),
+                                Text('Last Name: ${requestData['lastName'] ?? 'N/A'}'),
+                                Text('Relationship: ${requestData['relationship'] ?? 'N/A'}'),
                                 Text(
                                     'Student Number: ${requestData['studentNumber'] ?? 'N/A'}'),
                                 Text(
