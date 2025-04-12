@@ -90,7 +90,6 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
         },
       );
 
-
       if (confirm != true) return;
     }
 
@@ -443,17 +442,27 @@ class _DocumentRequestsScreenState extends State<DocumentRequestsScreen> {
                             ),
                             const SizedBox(height: 16),
                             ListTile(
-                              title: Text('Request by ${data['name'] ?? 'Unknown'}'),
+                              title: Text(
+                                  'Request by ${data['name'] ?? 'Unknown'}'),
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('First Name: ${data['firstName'] ?? 'N/A'}'),
-                                  Text('Last Name: ${data['lastName'] ?? 'N/A'}'),
-                                  Text('Relationship: ${data['relationship'] ?? 'N/A'}'),
-                                  Text('Student Number: ${data['studentNumber'] ?? 'N/A'}'),
+                                  Text(
+                                      'Claiming Method: ${data['claimingMethod'] ?? 'N/A'}'),
+                                  Text(
+                                      'Price: ${data['price'] != null ? 'PHP${data['price']}' : 'N/A'}'),
+                                  Text(
+                                      'First Name: ${data['firstName'] ?? 'N/A'}'),
+                                  Text(
+                                      'Last Name: ${data['lastName'] ?? 'N/A'}'),
+                                  Text(
+                                      'Relationship: ${data['relationship'] ?? 'N/A'}'),
+                                  Text(
+                                      'Student Number: ${data['studentNumber'] ?? 'N/A'}'),
                                   Text('Contact: ${data['contact'] ?? 'N/A'}'),
                                   if (data['sf10OfficialInfo'] != null)
-                                    Text('Requesting School: ${data['sf10OfficialInfo']}'),
+                                    Text(
+                                        'Requesting School: ${data['sf10OfficialInfo']}'),
                                 ],
                               ),
                             ),
